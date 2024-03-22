@@ -10,20 +10,24 @@ dp = Dispatcher()
 
 
 async def on_startup():
+    '''
+    Функция для создания базы данных в случае ее отсутсвия
+    '''
+
     try:
-        await db.db_start()
-        print('База данных создана')
+        await db.db_start()     
     except Exception as e:
         print(f'Ошибка при создании БД: {e}')
 
 
 async def main():
     dp.include_router(router)
-    await dp.start_polling(bot, on_startup=on_startup)
+    dp.startup.register(on_startup)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Exit')
+        print('Бот завершил работу')
