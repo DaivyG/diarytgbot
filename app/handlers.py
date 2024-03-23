@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 import app.database as db
 import app.keyboards as kb
 
-#!!!!!!!Обязательно сделать проверку ввода даты
+#!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
 router = Router()
 
@@ -63,15 +63,21 @@ async def usual_creating_fourh_step(message: Message, state: FSMContext):
 async def usual_creating_last_step(message: Message, state: FSMContext):
     await state.update_data(frequency=message.text, chat_id=message.chat.id)
     data = await state.get_data()
-    await message.answer(f'''Событие успешно создано со следующими параметрами:
-    Имя создателя события: {data["author"]},
-    Описание события: {data["text"]},
-    Дата и время: {data["datetime"]},
-    Цикличность повторения: {data["frequency"]}''')
 
-    await db.create_new_event(data)
+    try:
+        await db.create_new_event(data)
 
-    await state.clear()
+        await message.answer(f'''Событие успешно создано со следующими параметрами:
+        Имя создателя события: {data["author"]},
+        Описание события: {data["text"]},
+        Дата и время: {data["datetime"]},
+        Цикличность повторения: {data["frequency"]}''')
+
+        await state.clear()
+
+    except Exception as e:
+        print(f'Ошибка при создании события: {e}')
+        await message.answer('Произошла ошибка при создании события. Пожалуйста, повторите попытку.')
 
 @router.message(F.text == 'Быстрое создание')
 async def fast_creating():

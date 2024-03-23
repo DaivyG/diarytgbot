@@ -78,6 +78,9 @@ async def create_new_event(data:dict):
         chat_id = data.get("chat_id", "")
         datetime_of_event = await date_to_format(data.get("datetime", ""))
 
+        if datetime_of_event is None:
+            raise Exception('Вы ввели дату которая уже прошла')
+        
         # Вставляем данные в таблицу events
         cur.execute('''INSERT INTO events (full_text, author) VALUES (?, ?)''',
                     (full_text, author))
@@ -85,9 +88,6 @@ async def create_new_event(data:dict):
         event_id = cur.lastrowid
 
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
-        if datetime_of_event is None:
-            raise Exception('Вы ввели дату которая уже прошла')
-
         for i in datetime_of_event:
             cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
                         VALUES (?, ?, ?)''', (i, frequency, event_id))
@@ -99,9 +99,11 @@ async def create_new_event(data:dict):
         conn.commit()
 
         print('Событие успешно создано')
+        return True
 
     except Exception as e:
         print(f'Ошибка при создании нового мероприятия внутри database.py: {e}')
+        return False
 
     finally:
         cur.close()
