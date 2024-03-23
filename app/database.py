@@ -57,7 +57,7 @@ async def db_start():
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
         
         cur.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMAYR KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username VARCHAR(30),
                     name VARCHAR(30))''')
 
