@@ -9,12 +9,17 @@ import app.keyboards as kb
 
 #!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
+admins = ['Dayviyo']
+
 router = Router()
 
 
 @router.message(CommandStart())
 async def start(message: Message):
-    await message.answer('Приветствую! Что хотите сделать?', reply_markup=kb.initial_keyboard)
+    if message.from_user.username in admins:
+        await message.answer('Приветствую! Что хотите сделать?', reply_markup=kb.admin_initial_keyboard)
+    else:
+        await message.answer('Приветствую! Что хотите сделать?', reply_markup=kb.initial_keyboard)
 
 
 @router.message(F.text == 'Создать новое напоминание')
@@ -80,9 +85,12 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         await message.answer('Произошла ошибка при создании события. Пожалуйста, повторите попытку.')
 
 @router.message(F.text == 'Быстрое создание')
-async def fast_creating():
+async def fast_creating(message: Message):
     pass
 
+@router.message(F.text == 'Админ панель')
+async def adm_starting(message: Message):
+    await message.answer('На данный момент доступны следующие функции:', reply_markup=kb.admin_second_keyboard)
 
 # @router.message(F.text == 'Мои напоминания')
 # async def new_event(message: Message):
