@@ -13,7 +13,6 @@ async def on_startup():
     '''
     Функция для создания базы данных в случае ее отсутсвия
     '''
-
     try:
         await db.db_start()     
     except Exception as e:
@@ -31,3 +30,5 @@ if __name__ == '__main__':
         asyncio.run(main())
     except KeyboardInterrupt:
         print('Бот завершил работу')
+    except Exception as e:
+        print(f'Ошибка {e}')
