@@ -1,3 +1,6 @@
+#TODO сделать отпрваыку пользователям по способу который выберет заказчик
+#Также нужно сделать форматирование даты и времени события
+
 import sqlite3 as sq
 
 
@@ -56,7 +59,7 @@ async def create_new_event(data):
                     VALUES (?, ?, ?)''', ('-', data["chat_id"], event_id))
         
         conn.commit()
-        
+
         print('Событие успешно создано')
 
     except Exception as e:
