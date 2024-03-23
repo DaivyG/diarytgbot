@@ -5,11 +5,23 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Создать новое напоминание')],
     [KeyboardButton(text='Мои напоминания')]
-], resize_keyboard=True)
+], resize_keyboard=True, one_time_keyboard=True)
 
 
+second_keyboard = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Быстрое создание')],
+    [KeyboardButton(text='Обычное создание')]
+], resize_keyboard=True, one_time_keyboard=True)
 
-# ##сделать вывод списка тех событий которфе должны состояться
+
+frequency_of_event_keyboard = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='Один раз')],
+    [KeyboardButton(text='Ежедневно'), KeyboardButton(text='Еженедельно')],
+    [KeyboardButton(text='Ежемесячно'), KeyboardButton(text='Ежегодно')]
+], resize_keyboard=True, one_time_keyboard=True)
+
+
+# ##сделать вывод списка тех событий которые должны состояться
 # events = []
 
 # async def existing_events_keyboard():
