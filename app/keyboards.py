@@ -15,7 +15,7 @@ second_keyboard = ReplyKeyboardMarkup(keyboard=[
 
 
 frequency_of_event_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Один раз')],
+    [KeyboardButton(text='Единично')],
     [KeyboardButton(text='Ежедневно'), KeyboardButton(text='Еженедельно')],
     [KeyboardButton(text='Ежемесячно'), KeyboardButton(text='Ежегодно')]
 ], resize_keyboard=True, one_time_keyboard=True)

@@ -7,6 +7,8 @@ from aiogram.fsm.context import FSMContext
 import app.database as db
 import app.keyboards as kb
 
+#!!!!!!!Обязательно сделать проверку ввода даты
+
 router = Router()
 
 
@@ -18,7 +20,6 @@ async def start(message: Message):
 @router.message(F.text == 'Создать новое напоминание')
 async def create_new_event(message: Message):
     await message.answer('Хорошо, выберите способ создания напоминания', reply_markup=kb.second_keyboard)
-
 
 
 class New_event(StatesGroup):
@@ -48,7 +49,7 @@ async def usual_creating_second_step(message: Message, state: FSMContext):
 async def usual_creating_third_step(message: Message, state: FSMContext):
     await state.update_data(text=message.text)
     await state.set_state(New_event.date_and_time)
-    await message.answer('Введите дату и время события')
+    await message.answer('Введите дату и время события в формате "01.01.0001 01:01".')
 
 
 @router.message(New_event.date_and_time)
@@ -72,6 +73,9 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
     await state.clear()
 
+@router.message(F.text == 'Быстрое создание')
+async def fast_creating():
+    pass
 
 
 # @router.message(F.text == 'Мои напоминания')

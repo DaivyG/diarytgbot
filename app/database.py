@@ -1,7 +1,31 @@
 #TODO сделать отпрваыку пользователям по способу который выберет заказчик
 #Также нужно сделать форматирование даты и времени события
-
+from datetime import datetime, timedelta
 import sqlite3 as sq
+
+async def date_to_format(event_date):
+    now = datetime.now()
+
+    if not event_date:
+        next_day = now + timedelta(days=1)
+        return [next_day.replace(hour=9, minute=0, second=0, microsecond=0).strftime('%d.%m.%Y %H:%M')]
+
+    event_date = datetime.strptime(event_date, '%d.%m.%Y %H:%M')
+    difference = event_date - now
+
+    if difference <= timedelta():
+        return None
+
+    reminders = []
+    if difference.days >= 7:
+        reminders.append(event_date - timedelta(days=7))
+    if difference.days >= 3:
+        reminders.append(event_date - timedelta(days=3))
+    if difference.days >= 1:
+        reminders.append(event_date - timedelta(days=1))
+    reminders.append(event_date - timedelta(hours=1))
+
+    return reminders
 
 
 async def db_start():
@@ -42,21 +66,35 @@ async def db_start():
         conn.close()
 
     
-async def create_new_event(data):
+async def create_new_event(data:dict):
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
     try:
+        # Получаем значения из словаря data с возможностью установки значения по умолчанию
+        full_text = data.get("text", "")
+        author = data.get("author", "")
+        frequency = data.get("frequency", "Единично")
+        chat_id = data.get("chat_id", "")
+        datetime_of_event = await date_to_format(data.get("datetime", ""))
+
+        # Вставляем данные в таблицу events
         cur.execute('''INSERT INTO events (full_text, author) VALUES (?, ?)''',
-                    (data["text"], data["author"]))
+                    (full_text, author))
         
         event_id = cur.lastrowid
 
-        cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
-                    VALUES (?, ?, ?)''', (data["datetime"],  data["frequency"], event_id))
+        # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
+        if datetime_of_event is None:
+            raise Exception('Вы ввели дату которая уже прошла')
+
+        for i in datetime_of_event:
+            cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
+                        VALUES (?, ?, ?)''', (i, frequency, event_id))
         
+        # Вставляем данные в таблицу recipients
         cur.execute('''INSERT INTO recipients (recipients_name, chat_id, event_id)
-                    VALUES (?, ?, ?)''', ('-', data["chat_id"], event_id))
+                    VALUES (?, ?, ?)''', ('-', chat_id, event_id))
         
         conn.commit()
 
