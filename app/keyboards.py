@@ -39,7 +39,7 @@ admin_second_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 async def inline_events(events):
     keyboard = InlineKeyboardBuilder()
     for event in events:
-        keyboard.add(InlineKeyboardButton(text=event, callback_data=f'event_{event}'))
+        keyboard.add(InlineKeyboardButton(text=str(event[1]), callback_data=f'event-{event[2]}'))
     return keyboard.adjust(2).as_markup()
 
 # ##сделать вывод списка тех событий которые должны состояться
