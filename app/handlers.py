@@ -4,6 +4,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
+import app.functions as func
 import app.database as db
 import app.keyboards as kb
 
@@ -59,6 +60,11 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
 
 @router.message(New_event.date_and_time)
 async def usual_creating_fourh_step(message: Message, state: FSMContext):
+    if not await func.validate_date_time(message.text):
+        await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
+        await state.set_state(New_event.date_and_time)
+        return
+    
     await state.update_data(datetime=message.text)
     await state.set_state(New_event.frequency)
     await message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
