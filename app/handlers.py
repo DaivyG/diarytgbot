@@ -98,7 +98,17 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
 @router.message(F.text == 'Админ панель')
 async def adm_starting(message: Message):
-    await message.answer('На данный момент доступны следующие функции:', reply_markup=kb.admin_second_keyboard)
+    if message.from_user.username in admins:
+        await message.answer('На данный момент доступны следующие функции:', reply_markup=kb.admin_second_keyboard)
+    
+    else:
+        await message.answer('Вам не доступна эта функция')
+
+
+@router.callback_query(F.data == 'look_in_db')
+async def look_at_db(callback: CallbackQuery):
+    await callback.answer('Вы выбрали посмотреть записи')
+    await callback.message.edit_text('Вот все записи', reply_markup=await kb.inline_events(await db.look_at_db_events()))
 
 # @router.message(F.text == 'Мои напоминания')
 # async def new_event(message: Message):

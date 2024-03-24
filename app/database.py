@@ -33,9 +33,9 @@ async def db_start():
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
         
         cur.execute('''CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username VARCHAR(30),
-                    name VARCHAR(30))''')
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username VARCHAR(30),
+                        name VARCHAR(30))''')
 
         conn.commit()
 
@@ -75,6 +75,26 @@ async def create_new_event(data:dict):
     except Exception as e:
         print(f'Ошибка при создании нового мероприятия внутри database.py: {e}')
         return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def look_at_db_events():
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('SELECT * FROM events')
+
+        data = cur.fetchall()
+
+        if data:
+            return list(data)
+
+    except Exception as e:
+        print(f'Ошибка {e}')
 
     finally:
         cur.close()

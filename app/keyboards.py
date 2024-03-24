@@ -1,6 +1,8 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+
+import app.database as db
 
 initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Создать новое напоминание')],
@@ -27,12 +29,18 @@ frequency_of_event_keyboard = ReplyKeyboardMarkup(keyboard=[
 ], resize_keyboard=True, one_time_keyboard=True)
 
 
-admin_second_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Посмотреть базу данных')],
-    [KeyboardButton(text='Добавить человека в базу данных')],
-    [KeyboardButton(text='Удалить человека из базы данных')]
-])
+admin_second_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Посмотреть базу данных', callback_data='look_in_db')],
+    [InlineKeyboardButton(text='Добавить человека в базу данных', callback_data='add_at_db')],
+    [InlineKeyboardButton(text='Удалить человека из базы данных', callback_data='del_from_db')]
+], resize_keyboard=True)
 
+
+async def inline_events(events):
+    keyboard = InlineKeyboardBuilder()
+    for event in events:
+        keyboard.add(InlineKeyboardButton(text=event, callback_data=f'event_{event}'))
+    return keyboard.adjust(2).as_markup()
 
 # ##сделать вывод списка тех событий которые должны состояться
 # events = []
