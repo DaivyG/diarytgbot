@@ -35,31 +35,22 @@ class New_event(StatesGroup):
     text_of_event = State()
     date_and_time = State()
     frequency = State()
-    author = State()
 
 
-@router.message(F.text == 'Обычное создание')
-async def usual_creating_first_step(message: Message, state: FSMContext):
-    await state.set_state(New_event.author)
-    await message.answer('Введите ваше имя')
-
-
-@router.message(New_event.author)
-async def usual_creating_second_step(message: Message, state: FSMContext):
-    await state.update_data(author=message.text)
+@router.message(F.text == 'Быстрое создание')
+async def fast_creating_first_step(message: Message, state: FSMContext):
     await state.set_state(New_event.text_of_event)
     await message.answer('Введите описание события')
 
 
-@router.message(New_event.text_of_event)
-async def usual_creating_third_step(message: Message, state: FSMContext):
-    await state.update_data(text=message.text)
+@router.message(F.text == 'Обычное создание')
+async def usual_creating_first_step(message: Message, state: FSMContext):
     await state.set_state(New_event.date_and_time)
     await message.answer('Введите дату и время события в формате "01.01.0001 01:01".')
 
 
 @router.message(New_event.date_and_time)
-async def usual_creating_fourh_step(message: Message, state: FSMContext):
+async def usual_creating_second_step(message: Message, state: FSMContext):
     if not await func.validate_date_time(message.text):
         await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
         await state.set_state(New_event.date_and_time)
@@ -71,18 +62,32 @@ async def usual_creating_fourh_step(message: Message, state: FSMContext):
 
 
 @router.message(New_event.frequency)
+async def usual_creating_third_step(message: Message, state: FSMContext):
+    await state.update_data(frequency=message.text)
+    await state.set_state(New_event.text_of_event)
+    await message.answer('Введите описание события')
+
+
+@router.message(New_event.text_of_event)
 async def usual_creating_last_step(message: Message, state: FSMContext):
-    await state.update_data(frequency=message.text, chat_id=message.chat.id)
+    await state.update_data(text=message.text, chat_id=message.chat.id, author=message.from_user.username)
     data = await state.get_data()
 
     try:
-        await db.create_new_event(data)
+        author = data['author']
+        text = data['text']
+        frequency = data.setdefault('frequency', 'Единично')
+        datetime = data.get('datetime')
 
+        if datetime is None:
+            datetime = func.next_day_foo()
+
+        await db.create_new_event(data)
         await message.answer(f'''Событие успешно создано со следующими параметрами:
-        Имя создателя события: {data["author"]},
-        Описание события: {data["text"]},
-        Дата и время: {data["datetime"]},
-        Цикличность повторения: {data["frequency"]}''')
+        Имя создателя события: {author},
+        Описание события: {text},
+        Дата и время: {datetime},
+        Цикличность повторения: {frequency}''')
 
         await state.clear()
 
@@ -90,9 +95,6 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         print(f'Ошибка при создании события: {e}')
         await message.answer('Произошла ошибка при создании события. Пожалуйста, повторите попытку.')
 
-@router.message(F.text == 'Быстрое создание')
-async def fast_creating(message: Message):
-    pass
 
 @router.message(F.text == 'Админ панель')
 async def adm_starting(message: Message):

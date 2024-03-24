@@ -52,30 +52,20 @@ async def create_new_event(data:dict):
     cur = conn.cursor()
 
     try:
-        # Получаем значения из словаря data с возможностью установки значения по умолчанию
-        full_text = data.get("text", "")
-        author = data.get("author", "")
-        frequency = data.get("frequency", "Единично")
-        chat_id = data.get("chat_id", "")
-        datetime_of_event = await func.date_to_format(data.get("datetime", ""))
-
-        if datetime_of_event is None:
-            raise Exception('Вы ввели дату которая уже прошла')
-        
         # Вставляем данные в таблицу events
         cur.execute('''INSERT INTO events (full_text, author) VALUES (?, ?)''',
-                    (full_text, author))
+                    (data['text'], data['author']))
         
         event_id = cur.lastrowid
 
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
-        for i in datetime_of_event:
+        for i in func.date_to_format(data.get('datetime')):
             cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
-                        VALUES (?, ?, ?)''', (i, frequency, event_id))
+                        VALUES (?, ?, ?)''', (i, data['frequency'], event_id))
         
         # Вставляем данные в таблицу recipients
         cur.execute('''INSERT INTO recipients (recipients_name, chat_id, event_id)
-                    VALUES (?, ?, ?)''', ('-', chat_id, event_id))
+                    VALUES (?, ?, ?)''', ('-', data['chat_id'], event_id))
         
         conn.commit()
 
