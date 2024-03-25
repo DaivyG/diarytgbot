@@ -12,7 +12,7 @@ async def db_start():
         cur.execute('''CREATE TABLE IF NOT EXISTS events (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         full_text TEXT,
-                        heading VARCHAR(30) GENERATED ALWAYS AS (SUBSTR(full_text, 30)),
+                        heading VARCHAR(30) GENERATED ALWAYS AS (SUBSTR(full_text, 0, 30)),
                         date_of_creating DATETIME DEFAULT CURRENT_TIMESTAMP,
                         author VARCHAR(20))''')
 
@@ -81,17 +81,53 @@ async def create_new_event(data:dict):
         conn.close()
 
 
-async def look_at_db_events():
+async def look_at_db_users():
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
     try:
-        cur.execute('SELECT * FROM events')
+        cur.execute('SELECT * FROM users')
 
         data = cur.fetchall()
 
         if data:
             return list(data)
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        cur.close()
+        conn.close()
+
+    
+async def add_at_db_users(data):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute('''INSERT INTO users (username, name) 
+                    VALUES (?, ?)''', (data['username'], data['name']))
+
+        conn.commit()
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def del_from_db_users(data):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f'DELETE FROM users WHERE name="{data["name"]}"')
+
+        conn.commit()
 
     except Exception as e:
         print(f'Ошибка {e}')

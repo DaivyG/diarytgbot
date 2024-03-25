@@ -89,11 +89,12 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         Дата и время: {datetime},
         Цикличность повторения: {frequency}''')
 
-        await state.clear()
-
     except Exception as e:
         print(f'Ошибка при создании события: {e}')
         await message.answer('Произошла ошибка при создании события. Пожалуйста, повторите попытку.')
+
+    finally:
+        await state.clear()
 
 
 @router.message(F.text == 'Админ панель')
@@ -107,8 +108,72 @@ async def adm_starting(message: Message):
 
 @router.callback_query(F.data == 'look_in_db')
 async def look_at_db(callback: CallbackQuery):
-    await callback.answer('Вы выбрали посмотреть записи')
-    await callback.message.edit_text('Вот все записи', reply_markup=await kb.inline_events(await db.look_at_db_events()))
+    await callback.answer('Вы выбрали посмотреть пользователей')
+    await callback.message.edit_text('На данный момент список пользователей следующий:', reply_markup=await kb.all_users(await db.look_at_db_users()))
+
+
+class New_user(StatesGroup):
+    username = State()
+    name = State()
+
+
+@router.callback_query(F.data == 'add_at_db')
+async def add_at_db_first(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(New_user.username)
+    await callback.answer('Вы выбрали добавить пользователя')
+    await callback.message.answer('Пожалуйста, введите username нового пользователя')
+
+
+@router.message(New_user.username)
+async def add_at_db_second(message: Message, state: FSMContext):
+    await state.update_data(username=message.text)
+    await state.set_state(New_user.name)
+    await message.answer('Теперь введите имя пользователя')
+
+
+@router.message(New_user.name)
+async def add_at_db_last(message: Message, state: FSMContext):
+    await state.update_data(name=message.text.lower())
+    data = await state.get_data()
+
+    try:
+        await db.add_at_db_users(data)
+
+        await message.answer(f'Сохранение успешно! Пользователь {data["name"]} сохранен с никнеймом {data["username"]}')
+        print('Пользователь успешно сохранен')
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        await state.clear()
+
+
+class Delete_user(StatesGroup):
+    name = State()
+
+@router.callback_query(F.data == 'del_from_db')
+async def del_from_db_first(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(Delete_user.name)
+    await callback.answer('Вы выбрали удалить пользователя')
+    await callback.message.answer('Пожалуйста, введите имя пользователя, которого хотите удалить')
+
+
+@router.message(Delete_user.name)
+async def del_from_db_last(message: Message, state: FSMContext):
+    await state.update_data(name=message.text.lower())
+    data = await state.get_data()
+
+    try:
+        await db.del_from_db_users(data)
+
+        await message.answer(f'Удаление успешно! Пользователь с именем {data["name"]} удален')
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        await state.clear()
 
 # @router.message(F.text == 'Мои напоминания')
 # async def new_event(message: Message):

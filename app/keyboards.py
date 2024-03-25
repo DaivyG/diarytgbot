@@ -30,17 +30,26 @@ frequency_of_event_keyboard = ReplyKeyboardMarkup(keyboard=[
 
 
 admin_second_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Посмотреть базу данных', callback_data='look_in_db')],
-    [InlineKeyboardButton(text='Добавить человека в базу данных', callback_data='add_at_db')],
-    [InlineKeyboardButton(text='Удалить человека из базы данных', callback_data='del_from_db')]
+    [InlineKeyboardButton(text='Посмотреть базу данных пользователей', callback_data='look_in_db')],
+    [InlineKeyboardButton(text='Добавить человека в базу данных пользователей', callback_data='add_at_db')],
+    [InlineKeyboardButton(text='Удалить человека из базы данных пользователей', callback_data='del_from_db')]
 ], resize_keyboard=True)
 
 
-async def inline_events(events):
+async def all_users(users):
     keyboard = InlineKeyboardBuilder()
-    for event in events:
-        keyboard.add(InlineKeyboardButton(text=str(event[1]), callback_data=f'event-{event[2]}'))
+    for user in users:
+        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'user-{user[2]}'))
     return keyboard.adjust(2).as_markup()
+
+
+# async def add_user(users):
+#     keyboard = InlineKeyboardBuilder()
+#     for user in users:
+#         keyboard.add(InlineKeyboardButton(text=str(user[1]), callback_data=f'user-{user[2]}'))
+#     return keyboard.adjust(2).as_markup()
+
+
 
 # ##сделать вывод списка тех событий которые должны состояться
 # events = []
