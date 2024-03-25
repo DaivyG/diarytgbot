@@ -18,18 +18,17 @@ async def db_start():
 
         cur.execute('''CREATE TABLE IF NOT EXISTS recipients (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        recipients_name VARCHAR(30),
-                        chat_id VARCHAR(20),
+                        recipient_username VARCHAR(30),
                         event_id INT NOT NULL,
 
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
-        
+
         cur.execute('''CREATE TABLE IF NOT EXISTS dates_of_reminders (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         event_datetime DATETIME,
                         frequency VARCHAR(20),
                         event_id INT NOT NULL,
-                    
+
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
         
         cur.execute('''CREATE TABLE IF NOT EXISTS users (
@@ -55,18 +54,19 @@ async def create_new_event(data:dict):
         # Вставляем данные в таблицу events
         cur.execute('''INSERT INTO events (full_text, author) VALUES (?, ?)''',
                     (data['text'], data['author']))
-        
+
         event_id = cur.lastrowid
 
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
         for i in func.date_to_format(data.get('datetime')):
             cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
                         VALUES (?, ?, ?)''', (i, data['frequency'], event_id))
-        
+
         # Вставляем данные в таблицу recipients
-        cur.execute('''INSERT INTO recipients (recipients_name, chat_id, event_id)
-                    VALUES (?, ?, ?)''', ('-', data['chat_id'], event_id))
-        
+        for user in data['recipients']:
+            cur.execute('''INSERT INTO recipients (recipient_username, event_id)
+                        VALUES (?, ?, ?)''', (user, event_id))
+
         conn.commit()
 
         print('Событие успешно создано')
@@ -106,7 +106,6 @@ async def add_at_db_users(data):
     cur = conn.cursor()
 
     try:
-
         cur.execute('''INSERT INTO users (username, name) 
                     VALUES (?, ?)''', (data['username'], data['name']))
 
