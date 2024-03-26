@@ -75,13 +75,23 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
 
 
 list_of_users = []
-@router.callback_query(F.data == 'add_user-next_step')
+@router.callback_query(F.data.split('-')[0] == 'add_user')
 async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext):
     global list_of_users
 
-    list_of_users = list(set(list_of_users))
+    if callback.data.split('-')[1] == 'all_users':
+        await callback.answer()
+        for i in await db.look_at_db_users():
+            list_of_users.append(i[2])
+
+    elif callback.data.split('-')[1] != 'next_step':
+        await callback.answer()
+        list_of_users.append(callback.data.split('-')[1])
+        return
+
+    list_of_users = list(set(map(lambda x: x.capitalize(), list_of_users)))
     await callback.answer()
-    await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующий пользователей:{list_of_users}', reply_markup=None)
+    await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующий пользователей: {", ".join(list_of_users)}', reply_markup=None)
     await callback.message.answer('Введите описание события')
     await state.set_state(New_event.text_of_event)
     await state.update_data(recipients=list_of_users)
@@ -119,7 +129,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         Описание события: {text},
         Дата и время: {datetime},
         Цикличность повторения: {frequency},
-        Получатели: {recipients}''', reply_markup=kb.initial_keyboard)
+        Получатели: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
         list_of_users.clear()
 
 
@@ -221,29 +231,11 @@ async def del_from_db_last(message: Message, state: FSMContext):
         await state.clear()
 
 
-@router.callback_query(F.data.split('-')[0] == 'add_user' and F.data.split('-')[1] != 'next_step')
-async def add_user_at_event(callback: CallbackQuery):
-    await callback.answer()
-    global list_of_users
+# @router.callback_query(F.data.split('-')[0] == 'add_user')
+# async def add_user_at_event(callback: CallbackQuery):
+#     await callback.answer()
 
-    if callback.data.split('-')[1] == 'Все пользователи':
-        for i in db.look_at_db_users():
-            list_of_users.append(i[2])
-
-    else:
-        list_of_users.append(callback.data.split('-')[1])
-
-
-
-@router.callback_query(F.data == 'add_user-next_step')
-async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext):
-    global list_of_users
-
-    await callback.answer()
-    await callback.message.answer(f'Переходим к следующему шагу. Вы выбрали следующий пользователей:{list_of_users}', reply_markup=None)
-    await state.set_state(New_event.recipients)
-    await state.update_data(recipients=set(list_of_users))
-    list_of_users.clear()
+#     list_of_users.append(callback.data.split('-')[1])
 
 
 # @router.message(F.text == 'Мои напоминания')

@@ -65,7 +65,7 @@ async def create_new_event(data:dict):
         # Вставляем данные в таблицу recipients
         for user in data['recipients']:
             cur.execute('''INSERT INTO recipients (recipient_name, event_id)
-                        VALUES (?, ?)''', (user, event_id))
+                        VALUES (?, ?)''', (user.lower(), event_id))
 
         conn.commit()
 
