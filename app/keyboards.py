@@ -49,15 +49,26 @@ admin_second_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 ], resize_keyboard=True)
 
 
-async def all_users(users):
+async def all_users_keyboard(users):
     '''
     Клавиатура для вывода "Посмотреть базу данных пользователей"
     '''
     keyboard = InlineKeyboardBuilder()
     for user in users:
-        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'user-{user[2]}'))
+        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'non_clickable'))
     return keyboard.adjust(2).as_markup()
 
+
+async def add_users_keyboard(users):
+    '''
+    Клавиатура для добавления пользователей в напоминание "Добавить пользователя в базу данных"
+    '''
+    keyboard = InlineKeyboardBuilder()
+    for user in users:
+        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'add_user-{user[2]}'))
+    keyboard.add(InlineKeyboardButton(text='Все пользователи', callback_data='add_user-all_users'))
+    keyboard.add(InlineKeyboardButton(text='Далее', callback_data='add_user-next_step'))
+    return keyboard.adjust(2).as_markup()
 
 
 # ##сделать вывод списка тех событий которые должны состояться

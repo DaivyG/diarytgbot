@@ -18,7 +18,7 @@ async def db_start():
 
         cur.execute('''CREATE TABLE IF NOT EXISTS recipients (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        recipient_username VARCHAR(30),
+                        recipient_name VARCHAR(30),
                         event_id INT NOT NULL,
 
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
@@ -64,8 +64,8 @@ async def create_new_event(data:dict):
 
         # Вставляем данные в таблицу recipients
         for user in data['recipients']:
-            cur.execute('''INSERT INTO recipients (recipient_username, event_id)
-                        VALUES (?, ?, ?)''', (user, event_id))
+            cur.execute('''INSERT INTO recipients (recipient_name, event_id)
+                        VALUES (?, ?)''', (user, event_id))
 
         conn.commit()
 
