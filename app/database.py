@@ -185,3 +185,34 @@ async def username_to_name(username):
     finally:
         cur.close()
         conn.close()
+
+    
+async def look_at_cur_event(event_name):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''SELECT * 
+                    FROM events 
+                    WHERE heading=?''', (event_name,))
+
+        data = cur.fetchall()
+        if data:
+            event_id = data[0][0]  # Первый столбец возвращаемого результата, предполагая, что это id
+
+            cur.execute('''SELECT recipient_name
+                        FROM recipients
+                        WHERE event_id=?''', (event_id,))
+
+            recipients = cur.fetchall()
+            return data, recipients
+
+        else:
+            return None, None
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        cur.close()
+        conn.close()

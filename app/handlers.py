@@ -235,3 +235,31 @@ async def admin_panel(message: Message):
     data = await db.look_at_db_events(message.from_user.username)
     await message.answer('На данный момент у вас следующие напоминания: ', reply_markup=await kb.look_at_my_events(data))
     await message.answer('При нажатии на любое из напоминаний вам высветиться информация он нем', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+
+
+@router.callback_query(F.data.split('-')[0] == 'look_at_my_event')
+async def select_one_of_events(callback: CallbackQuery):
+    try:
+        await callback.answer()
+        info, recipients = await db.look_at_cur_event(callback.data.split('-')[1])
+
+
+        unpacked_data = [item for sublist in info for item in sublist]
+        unpacked_recipients = [item[0] for item in recipients]
+
+        full_text = unpacked_data[1]
+        small_text = unpacked_data[2]
+        datetime = unpacked_data[3]
+        author_username = unpacked_data[4]
+
+        recipients = ', '.join(unpacked_recipients)
+
+        await callback.message.answer(text=f'''Полный текст события: {full_text},
+Краткое описание события: {small_text},
+Время создания события: {datetime},
+Автор события: {author_username},
+Получатели события: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
+
+
+    except Exception as e:
+        await callback.message.answer(text=f'Что-то пошло не так при просмотре базы данных: {e}')
