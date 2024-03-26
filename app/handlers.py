@@ -17,10 +17,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def start(message: Message):
-    if message.from_user.username in admins:
-        await message.answer('Приветствую! Что хотите сделать?', reply_markup=kb.admin_initial_keyboard)
-    else:
-        await message.answer('Приветствую! Что хотите сделать?', reply_markup=kb.initial_keyboard)
+    await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
 
 @router.message(F.text == 'Создать новое напоминание')
@@ -111,10 +108,10 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         frequency = data.setdefault('frequency', 'Единично')
         datetime = data.get('datetime')
         recipients = data.get('recipients')
-     
+
         if recipients is None:
-            recipients = message.from_user.username
-            data['recipients'] = [message.from_user.username]
+            recipients = await db.username_to_name(message.from_user.username)
+            data['recipients'] = [recipients]
 
         else:
             recipients = [recipient.capitalize() for recipient in data['recipients']]
@@ -125,7 +122,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
         await db.create_new_event(data)
         await message.answer(f'''Событие успешно создано со следующими параметрами:
-        Имя создателя события: {author},
+        Username создателя события: {author},
         Описание события: {text},
         Дата и время: {datetime},
         Цикличность повторения: {frequency},
@@ -157,6 +154,7 @@ async def adm_starting(message: Message):
 async def look_at_db(callback: CallbackQuery):
     await callback.answer('Вы выбрали посмотреть пользователей')
     await callback.message.edit_text('На данный момент список пользователей следующий:', reply_markup=await kb.all_users_keyboard(await db.look_at_db_users()))
+    await callback.message.answer('Что еще хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
 
 
 class New_user(StatesGroup):
@@ -183,6 +181,7 @@ async def add_at_db_second(message: Message, state: FSMContext):
     if all(char.isalpha() and char.isascii() for char in message.text) is False:
         await state.set_state(New_user.username)
         await message.answer('Что-то пошло не так. Проверьте корректность введенного username')
+        return
 
     await state.update_data(username=message.text)
     data = await state.get_data()
@@ -190,7 +189,7 @@ async def add_at_db_second(message: Message, state: FSMContext):
     try:
         await db.add_at_db_users(data)
 
-        await message.answer(f'Сохранение успешно! Пользователь {data["name"].capitalize()} сохранен с никнеймом {data["username"]}')
+        await message.answer(f'Сохранение успешно! Пользователь {data["name"].capitalize()} сохранен с никнеймом {data["username"]}', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
         print('Пользователь успешно сохранен')
 
     except Exception as e:
@@ -222,7 +221,7 @@ async def del_from_db_last(message: Message, state: FSMContext):
     try:
         await db.del_from_db_users(data)
 
-        await message.answer(f'Удаление успешно! Пользователь с именем {data["name"].capitalize()} удален')
+        await message.answer(f'Удаление успешно! Пользователь с именем {data["name"].capitalize()} удален', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
     except Exception as e:
         print(f'Ошибка {e}')
@@ -231,13 +230,8 @@ async def del_from_db_last(message: Message, state: FSMContext):
         await state.clear()
 
 
-# @router.callback_query(F.data.split('-')[0] == 'add_user')
-# async def add_user_at_event(callback: CallbackQuery):
-#     await callback.answer()
-
-#     list_of_users.append(callback.data.split('-')[1])
-
-
-# @router.message(F.text == 'Мои напоминания')
-# async def new_event(message: Message):
-#     await message.answer('Все ваши события на данный момент:', reply_markup=await kb.existing_events_keyboard())   #Нужно отсортировать список вывода событий от ближайшего к дальнейшему
+@router.message(F.text == 'Мои напоминания')
+async def admin_panel(message: Message):
+    data = await db.look_at_db_events(message.from_user.username)
+    await message.answer('На данный момент у вас следующие напоминания: ', reply_markup=await kb.look_at_my_events(data))
+    await message.answer('При нажатии на любое из напоминаний вам высветиться информация он нем', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])

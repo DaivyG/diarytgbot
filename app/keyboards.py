@@ -71,6 +71,17 @@ async def add_users_keyboard(users):
     return keyboard.adjust(2).as_markup()
 
 
+async def look_at_my_events(events):
+    '''
+    Клавиатура для нажатия на свои события
+    '''
+    keyboard = InlineKeyboardBuilder()
+    for event in events:
+        keyboard.add(InlineKeyboardButton(text=str(event[0]), callback_data=f'look_at_my_event-{event[0]}'))
+
+    return keyboard.adjust(2).as_markup()
+
+
 # ##сделать вывод списка тех событий которые должны состояться
 # events = []
 

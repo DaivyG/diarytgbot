@@ -2,7 +2,11 @@
 #Также нужно сделать форматирование даты и времени события
 import sqlite3 as sq
 import app.functions as func
+import logging
 
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='logfile.log')
+logger = logging.getLogger(__name__)
 
 async def db_start():
     conn = sq.connect('tg.db')
@@ -18,6 +22,7 @@ async def db_start():
 
         cur.execute('''CREATE TABLE IF NOT EXISTS recipients (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        author_name VARCHAR(30),
                         recipient_name VARCHAR(30),
                         event_id INT NOT NULL,
 
@@ -64,8 +69,8 @@ async def create_new_event(data:dict):
 
         # Вставляем данные в таблицу recipients
         for user in data['recipients']:
-            cur.execute('''INSERT INTO recipients (recipient_name, event_id)
-                        VALUES (?, ?)''', (user.lower(), event_id))
+            cur.execute('''INSERT INTO recipients (author_name, recipient_name, event_id)
+                        VALUES (?, ?, ?)''', (data['author'], user.lower(), event_id))
 
         conn.commit()
 
@@ -127,6 +132,52 @@ async def del_from_db_users(data):
         cur.execute(f'DELETE FROM users WHERE name="{data["name"]}"')
 
         conn.commit()
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def look_at_db_events(name):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+    try:
+        # Выполняем запрос к таблице users
+        cur.execute('SELECT name FROM users WHERE username=?', (name,))
+        user_name = cur.fetchone()
+
+        if user_name:
+            # Если пользователь найден, выполняем запрос к таблице events
+            cur.execute('''SELECT heading 
+                            FROM events e
+                            JOIN recipients r ON e.id = r.event_id
+                            WHERE r.recipient_name=?''', (user_name[0],))
+            data = cur.fetchall()
+
+            if data:
+                return data
+            else:
+                return 'У вас нет напоминаний'
+        else:
+            return 'Пользователь не найден'
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return 'Произошла ошибка при выполнении запроса'
+    
+
+async def username_to_name(username):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('SELECT name FROM users WHERE username=?', (username,))
+        user_name = cur.fetchone()
+
+        return user_name[0]
 
     except Exception as e:
         print(f'Ошибка {e}')

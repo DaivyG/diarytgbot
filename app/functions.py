@@ -38,4 +38,3 @@ def date_to_format(event_date=None):
     reminders.append(event_date - timedelta(hours=1))
 
     return reminders
-
