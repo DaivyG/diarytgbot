@@ -1,5 +1,4 @@
 #TODO сделать отпрваыку пользователям по способу который выберет заказчик
-#Также нужно сделать форматирование даты и времени события
 import sqlite3 as sq
 import app.functions as func
 import logging
@@ -7,6 +6,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='logfile.log')
 logger = logging.getLogger(__name__)
+
 
 async def db_start():
     conn = sq.connect('tg.db')
@@ -18,7 +18,8 @@ async def db_start():
                         full_text TEXT,
                         heading VARCHAR(30) GENERATED ALWAYS AS (SUBSTR(full_text, 0, 30)),
                         date_of_creating DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        author VARCHAR(20))''')
+                        author VARCHAR(20),
+                        date_and_time DATETIME)''')
 
         cur.execute('''CREATE TABLE IF NOT EXISTS recipients (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,8 +58,11 @@ async def create_new_event(data:dict):
 
     try:
         # Вставляем данные в таблицу events
-        cur.execute('''INSERT INTO events (full_text, author) VALUES (?, ?)''',
-                    (data['text'], data['author']))
+        _datetime = data.get('datetime')
+        if _datetime is None:
+            _datetime = func.next_day_foo()
+        cur.execute('''INSERT INTO events (full_text, author, date_and_time) VALUES (?, ?, ?)''',
+                    (data['text'], data['author'], _datetime))
 
         event_id = cur.lastrowid
 
@@ -205,13 +209,74 @@ async def look_at_cur_event(event_name):
                         WHERE event_id=?''', (event_id,))
 
             recipients = cur.fetchall()
-            return data, recipients
+
+            cur.execute('''SELECT frequency
+                        FROM dates_of_reminders
+                        WHERE event_id=?''', (event_id, ))
+            
+            frequency = cur.fetchall()[0][0]
+            return data, recipients, frequency
 
         else:
             return None, None
 
     except Exception as e:
         print(f'Ошибка {e}')
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def change_full_text(text, id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f'''UPDATE events SET
+                    full_text = "{text}"
+                    WHERE id = {id_}''')
+        
+        conn.commit()
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+    
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def change_datetime(datetime, id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''UPDATE events SET
+                   date_and_time = ?
+                   WHERE id = ?''', (datetime, id_))
+       
+        cur.execute('''SELECT frequency
+                    FROM dates_of_reminders
+                    WHERE event_id = ?''', (id_,))
+       
+        frequency = cur.fetchall()[0][0]
+
+        cur.execute('''DELETE FROM dates_of_reminders
+                    WHERE event_id = ?''', (id_,))
+       
+        list_of_dates_reminders = func.date_to_format(datetime)
+    
+        for i in list_of_dates_reminders:
+            cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
+                        VALUES (?, ?, ?)''', (i, frequency, id_))
+
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
 
     finally:
         cur.close()

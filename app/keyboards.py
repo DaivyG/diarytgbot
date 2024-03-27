@@ -82,11 +82,23 @@ async def look_at_my_events(events):
     return keyboard.adjust(2).as_markup()
 
 
-# ##сделать вывод списка тех событий которые должны состояться
-# events = []
+'''
+Клавиатура показывающая возможные действия под выбранным событием
+'''
+my_events_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Изменить информацию в событии', callback_data='edit_my_event')],
+    [InlineKeyboardButton(text='Сохранить событие', callback_data='save_my_event')],
+    [InlineKeyboardButton(text='Удалить событие', callback_data='delete_my_event')]
+])
 
-# async def existing_events_keyboard():
-#     keyboard = InlineKeyboardBuilder()
-#     for event in events:
-#         keyboard.add(InlineKeyboardButton(text=event, callback_data='event')) ##Сделать поиск по id
-#     return keyboard.adjust(2).as_markup()
+'''
+Клавиатура после нажатия "Изменить информацию в событии"
+'''
+edit_my_event_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Изменить текст события', callback_data='change_full_text')], 
+    [InlineKeyboardButton(text='Изменить дату и время события', callback_data='change_datetime')],
+    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')],
+    [InlineKeyboardButton(text='Добавить адресата', callback_data='add_recipient')],
+    [InlineKeyboardButton(text='Удалить адресата', callback_data='delete_recipient')],
+    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_reminder')]
+])

@@ -11,7 +11,6 @@ import app.keyboards as kb
 #!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
 admins = ['Dayviyo']
-
 router = Router()
 
 
@@ -234,32 +233,109 @@ async def del_from_db_last(message: Message, state: FSMContext):
 async def admin_panel(message: Message):
     data = await db.look_at_db_events(message.from_user.username)
     await message.answer('На данный момент у вас следующие напоминания: ', reply_markup=await kb.look_at_my_events(data))
-    await message.answer('При нажатии на любое из напоминаний вам высветиться информация он нем', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+    await message.answer('При нажатии на любое из напоминаний вам высветиться полная информация о нем', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
 
 @router.callback_query(F.data.split('-')[0] == 'look_at_my_event')
 async def select_one_of_events(callback: CallbackQuery):
+    global _id
     try:
         await callback.answer()
-        info, recipients = await db.look_at_cur_event(callback.data.split('-')[1])
-
+        info, recipients, frequency = await db.look_at_cur_event(callback.data.split('-')[1])
 
         unpacked_data = [item for sublist in info for item in sublist]
         unpacked_recipients = [item[0] for item in recipients]
 
+        _id = unpacked_data[0]
         full_text = unpacked_data[1]
         small_text = unpacked_data[2]
-        datetime = unpacked_data[3]
+        datetime_of_creating = unpacked_data[3]
         author_username = unpacked_data[4]
+        datetime_of_event = unpacked_data[5]
 
         recipients = ', '.join(unpacked_recipients)
 
         await callback.message.answer(text=f'''Полный текст события: {full_text},
 Краткое описание события: {small_text},
-Время создания события: {datetime},
+Время создания события: {datetime_of_creating},
+Время самого события: {datetime_of_event},
+Цикличность события: {frequency},
 Автор события: {author_username},
-Получатели события: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
+Получатели события: {recipients}''', reply_markup=kb.my_events_inline_keyboard)
 
 
     except Exception as e:
         await callback.message.answer(text=f'Что-то пошло не так при просмотре базы данных: {e}')
+
+
+@router.callback_query(F.data == 'save_my_event')
+async def save_my_event(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.edit_text('Сохранение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins]) # ????????????????????????????????
+
+
+@router.callback_query(F.data == 'edit_my_event')
+async def edit_my_event(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer(text='Что именно хотите изменить?', reply_markup=kb.edit_my_event_keyboard)
+
+
+class Edit_event(StatesGroup):
+    change_full_text = State()
+    change_datetime = State()
+
+
+@router.callback_query(F.data == 'change_full_text')
+async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
+    try:
+        await callback.answer()
+        await callback.message.answer(text='Введите полный текст для данного события')
+        await state.set_state(Edit_event.change_full_text)
+
+    except Exception as e:
+        print(f'Что-то пошло не так {e}')
+        await callback.message.answer(f'Что-то пошло не так: {e}')
+
+@router.message(Edit_event.change_full_text)
+async def change_full_text_last(message: Message, state: FSMContext):
+    try:
+        await state.update_data(text=message.text)
+        data = await state.get_data()
+        
+        await db.change_full_text(data['text'], _id)
+
+        await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+    
+    except Exception as e:
+        await message.answer(f'Что-то пошло не так: {e}')
+    
+    finally:
+        await state.clear()
+
+@router.callback_query(F.data == 'change_datetime')
+async def change_datetime_first(callback: CallbackQuery, state: FSMContext):
+    try:
+        await callback.answer()
+        await callback.message.answer(text='Введите новые дату и время в соответствии с форматом "01.01.0001 01:01"')
+        await state.set_state(Edit_event.change_datetime)
+
+    except Exception as e:
+        callback.message.answer(f'Что-то пошло не так {e}')
+
+@router.message(Edit_event.change_datetime)
+async def change_datetime_last(message: Message, state: FSMContext):
+    try:
+        if not await func.validate_date_time(message.text):
+            await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
+            await state.set_state(Edit_event.change_datetime)
+            return
+        
+        await state.update_data(datetime=message.text)
+        data = await state.get_data()
+        
+        if await db.change_datetime(data['datetime'], _id):
+            await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+
+
+    except Exception as e:
+        message.answer(f'Что-то пошло не так: {e}')

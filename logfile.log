@@ -1,28 +1,240 @@
-2024-03-26 23:30:45,586 - INFO - Polling stopped
-2024-03-26 23:30:45,841 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:30:54,346 - INFO - Start polling
-2024-03-26 23:30:54,522 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:30:59,940 - INFO - Update id=972555168 is handled. Duration 233 ms by bot id=6869227116
-2024-03-26 23:31:04,002 - INFO - Update id=972555169 is handled. Duration 313 ms by bot id=6869227116
-2024-03-26 23:31:05,213 - INFO - Update id=972555170 is handled. Duration 218 ms by bot id=6869227116
-2024-03-26 23:31:58,857 - INFO - Polling stopped
-2024-03-26 23:31:59,109 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:32:01,954 - INFO - Start polling
-2024-03-26 23:32:02,150 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:32:04,455 - INFO - Update id=972555171 is handled. Duration 327 ms by bot id=6869227116
-2024-03-26 23:32:05,567 - INFO - Update id=972555172 is handled. Duration 295 ms by bot id=6869227116
-2024-03-26 23:32:23,272 - INFO - Polling stopped
-2024-03-26 23:32:23,531 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:32:26,247 - INFO - Start polling
-2024-03-26 23:32:26,438 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:32:27,173 - INFO - Update id=972555173 is handled. Duration 202 ms by bot id=6869227116
-2024-03-26 23:32:28,720 - INFO - Update id=972555174 is handled. Duration 218 ms by bot id=6869227116
-2024-03-26 23:32:30,029 - INFO - Update id=972555175 is handled. Duration 172 ms by bot id=6869227116
-2024-03-26 23:33:21,331 - INFO - Polling stopped
-2024-03-26 23:33:21,585 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:33:24,487 - INFO - Start polling
-2024-03-26 23:33:24,647 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
-2024-03-26 23:33:25,049 - INFO - Update id=972555176 is handled. Duration 327 ms by bot id=6869227116
-2024-03-26 23:33:26,178 - INFO - Update id=972555177 is handled. Duration 311 ms by bot id=6869227116
-2024-03-26 23:35:33,515 - INFO - Polling stopped
-2024-03-26 23:35:33,778 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:12:33,122 - INFO - Update id=972555241 is handled. Duration 250 ms by bot id=6869227116
+2024-03-28 00:12:34,154 - INFO - Update id=972555242 is handled. Duration 172 ms by bot id=6869227116
+2024-03-28 00:12:35,364 - INFO - Update id=972555243 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:12:37,158 - INFO - Update id=972555244 is handled. Duration 327 ms by bot id=6869227116
+2024-03-28 00:12:39,688 - INFO - Update id=972555245 is not handled. Duration 15 ms by bot id=6869227116
+2024-03-28 00:12:39,688 - ERROR - Cause exception while process update id=972555245 by bot id=6869227116
+TypeError: State.__init__() got multiple values for argument 'state'
+Traceback (most recent call last):
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 309, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 158, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 25, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 27, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\fsm\middleware.py", line 41, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 121, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 43, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 276, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 128, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 123, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 156, in _propagate_event
+    response = await router.propagate_event(update_type=update_type, event=event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 128, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 123, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\router.py", line 148, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 113, in trigger
+    result, data = await handler.check(event, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 94, in check
+    check = await event_filter.call(*args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 48, in call
+    return await loop.run_in_executor(None, wrapped)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gusey\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: State.__init__() got multiple values for argument 'state'
+2024-03-28 00:13:36,218 - INFO - Polling stopped
+2024-03-28 00:13:36,473 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:13:39,204 - INFO - Start polling
+2024-03-28 00:13:39,416 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:13:43,908 - INFO - Update id=972555246 is handled. Duration 172 ms by bot id=6869227116
+2024-03-28 00:13:45,913 - INFO - Update id=972555247 is handled. Duration 141 ms by bot id=6869227116
+2024-03-28 00:13:47,242 - INFO - Update id=972555248 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 00:13:48,403 - INFO - Update id=972555249 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 00:13:49,308 - INFO - Update id=972555250 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 00:13:51,497 - INFO - Update id=972555251 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 00:14:21,610 - INFO - Polling stopped
+2024-03-28 00:14:21,878 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:14:24,671 - INFO - Start polling
+2024-03-28 00:14:24,827 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:14:29,056 - INFO - Update id=972555252 is handled. Duration 186 ms by bot id=6869227116
+2024-03-28 00:14:30,195 - INFO - Update id=972555253 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:14:31,278 - INFO - Update id=972555254 is handled. Duration 172 ms by bot id=6869227116
+2024-03-28 00:14:32,592 - INFO - Update id=972555255 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:14:33,560 - INFO - Update id=972555256 is handled. Duration 155 ms by bot id=6869227116
+2024-03-28 00:14:35,662 - INFO - Update id=972555257 is handled. Duration 62 ms by bot id=6869227116
+2024-03-28 00:14:38,551 - INFO - Update id=972555258 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:15:20,241 - INFO - Polling stopped
+2024-03-28 00:15:20,492 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:15:25,404 - INFO - Start polling
+2024-03-28 00:15:25,590 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:15:26,954 - INFO - Update id=972555259 is handled. Duration 219 ms by bot id=6869227116
+2024-03-28 00:15:27,964 - INFO - Update id=972555260 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:15:28,858 - INFO - Update id=972555261 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:15:29,805 - INFO - Update id=972555262 is handled. Duration 186 ms by bot id=6869227116
+2024-03-28 00:15:32,045 - INFO - Update id=972555263 is handled. Duration 218 ms by bot id=6869227116
+2024-03-28 00:15:36,180 - INFO - Update id=972555264 is handled. Duration 218 ms by bot id=6869227116
+2024-03-28 00:15:37,672 - INFO - Update id=972555265 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:16:16,744 - INFO - Polling stopped
+2024-03-28 00:16:17,007 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:16:42,295 - INFO - Start polling
+2024-03-28 00:16:42,455 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:16:46,600 - INFO - Update id=972555266 is handled. Duration 203 ms by bot id=6869227116
+2024-03-28 00:16:47,563 - INFO - Update id=972555267 is handled. Duration 155 ms by bot id=6869227116
+2024-03-28 00:16:49,548 - INFO - Update id=972555268 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:16:51,687 - INFO - Update id=972555269 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:16:55,950 - INFO - Update id=972555270 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:17:05,322 - INFO - Update id=972555271 is handled. Duration 94 ms by bot id=6869227116
+2024-03-28 00:17:06,739 - INFO - Update id=972555272 is handled. Duration 155 ms by bot id=6869227116
+2024-03-28 00:17:16,511 - INFO - Polling stopped
+2024-03-28 00:17:16,636 - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [Errno 1] [SSL: APPLICATION_DATA_AFTER_CLOSE_NOTIFY] application data after close notify (_ssl.c:2702)
+2024-03-28 00:17:16,636 - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 6869227116)
+2024-03-28 00:17:16,773 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:27:01,705 - INFO - Start polling
+2024-03-28 00:27:01,881 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:27:03,463 - INFO - Update id=972555273 is handled. Duration 250 ms by bot id=6869227116
+2024-03-28 00:27:04,463 - INFO - Update id=972555274 is handled. Duration 187 ms by bot id=6869227116
+2024-03-28 00:27:05,387 - INFO - Update id=972555275 is handled. Duration 139 ms by bot id=6869227116
+2024-03-28 00:42:34,751 - INFO - Polling stopped
+2024-03-28 00:42:35,007 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:42:38,042 - INFO - Start polling
+2024-03-28 00:42:38,408 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:42:39,864 - INFO - Update id=972555276 is handled. Duration 297 ms by bot id=6869227116
+2024-03-28 00:42:41,577 - INFO - Update id=972555277 is handled. Duration 234 ms by bot id=6869227116
+2024-03-28 00:42:44,581 - INFO - Polling stopped
+2024-03-28 00:42:44,835 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:43:07,563 - INFO - Start polling
+2024-03-28 00:43:07,746 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:43:08,669 - INFO - Polling stopped
+2024-03-28 00:43:08,933 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:43:29,874 - INFO - Start polling
+2024-03-28 00:43:30,136 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:44:57,628 - INFO - Polling stopped
+2024-03-28 00:44:57,887 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:45:00,525 - INFO - Start polling
+2024-03-28 00:45:00,694 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:45:02,093 - INFO - Update id=972555278 is handled. Duration 187 ms by bot id=6869227116
+2024-03-28 00:45:03,221 - INFO - Update id=972555279 is handled. Duration 62 ms by bot id=6869227116
+2024-03-28 00:45:03,995 - INFO - Update id=972555280 is handled. Duration 77 ms by bot id=6869227116
+2024-03-28 00:45:07,987 - INFO - Update id=972555281 is handled. Duration 63 ms by bot id=6869227116
+2024-03-28 00:46:45,085 - INFO - Polling stopped
+2024-03-28 00:46:45,349 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:46:48,275 - INFO - Start polling
+2024-03-28 00:46:48,456 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:46:50,585 - INFO - Update id=972555282 is handled. Duration 233 ms by bot id=6869227116
+2024-03-28 00:46:51,540 - INFO - Update id=972555283 is handled. Duration 77 ms by bot id=6869227116
+2024-03-28 00:46:52,379 - INFO - Update id=972555284 is handled. Duration 93 ms by bot id=6869227116
+2024-03-28 00:46:53,946 - INFO - Update id=972555285 is handled. Duration 109 ms by bot id=6869227116
+2024-03-28 00:47:10,749 - INFO - Update id=972555286 is handled. Duration 280 ms by bot id=6869227116
+2024-03-28 00:47:12,323 - INFO - Update id=972555287 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:47:40,060 - INFO - Polling stopped
+2024-03-28 00:47:40,320 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:50:27,467 - INFO - Start polling
+2024-03-28 00:50:27,652 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:50:31,461 - INFO - Update id=972555288 is handled. Duration 233 ms by bot id=6869227116
+2024-03-28 00:50:32,982 - INFO - Update id=972555289 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 00:50:34,155 - INFO - Update id=972555290 is handled. Duration 218 ms by bot id=6869227116
+2024-03-28 00:50:39,194 - INFO - Update id=972555291 is handled. Duration 109 ms by bot id=6869227116
+2024-03-28 00:51:02,896 - INFO - Polling stopped
+2024-03-28 00:51:03,159 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:51:14,105 - INFO - Start polling
+2024-03-28 00:51:14,266 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 00:51:21,622 - INFO - Update id=972555292 is handled. Duration 202 ms by bot id=6869227116
+2024-03-28 00:51:22,516 - INFO - Update id=972555293 is handled. Duration 62 ms by bot id=6869227116
+2024-03-28 00:51:25,312 - INFO - Update id=972555294 is handled. Duration 77 ms by bot id=6869227116
+2024-03-28 00:51:27,236 - INFO - Update id=972555295 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 00:51:28,390 - INFO - Update id=972555296 is handled. Duration 266 ms by bot id=6869227116
+2024-03-28 00:51:37,539 - INFO - Update id=972555297 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 00:52:10,345 - INFO - Polling stopped
+2024-03-28 00:52:10,610 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:04:02,401 - INFO - Start polling
+2024-03-28 01:04:02,596 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:04:10,251 - INFO - Update id=972555298 is not handled. Duration 16 ms by bot id=6869227116
+2024-03-28 01:04:11,938 - INFO - Update id=972555299 is handled. Duration 218 ms by bot id=6869227116
+2024-03-28 01:04:15,594 - INFO - Update id=972555300 is handled. Duration 172 ms by bot id=6869227116
+2024-03-28 01:04:16,873 - INFO - Update id=972555301 is handled. Duration 202 ms by bot id=6869227116
+2024-03-28 01:04:18,390 - INFO - Update id=972555302 is handled. Duration 281 ms by bot id=6869227116
+2024-03-28 01:04:19,931 - INFO - Update id=972555303 is handled. Duration 141 ms by bot id=6869227116
+2024-03-28 01:04:28,821 - INFO - Update id=972555304 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 01:06:34,018 - INFO - Update id=972555305 is handled. Duration 265 ms by bot id=6869227116
+2024-03-28 01:06:36,901 - INFO - Update id=972555306 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:07:00,911 - INFO - Update id=972555307 is handled. Duration 375 ms by bot id=6869227116
+2024-03-28 01:07:02,380 - INFO - Update id=972555308 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:07:21,978 - INFO - Update id=972555309 is handled. Duration 188 ms by bot id=6869227116
+2024-03-28 01:07:50,338 - INFO - Polling stopped
+2024-03-28 01:07:50,599 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:07:54,667 - INFO - Start polling
+2024-03-28 01:07:54,821 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:07:55,145 - INFO - Update id=972555310 is handled. Duration 265 ms by bot id=6869227116
+2024-03-28 01:07:57,896 - INFO - Update id=972555311 is handled. Duration 156 ms by bot id=6869227116
+2024-03-28 01:08:04,540 - INFO - Polling stopped
+2024-03-28 01:08:04,802 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:08:22,287 - INFO - Start polling
+2024-03-28 01:08:22,465 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:08:23,152 - INFO - Update id=972555312 is handled. Duration 171 ms by bot id=6869227116
+2024-03-28 01:08:24,689 - INFO - Update id=972555313 is handled. Duration 93 ms by bot id=6869227116
+2024-03-28 01:08:26,819 - INFO - Update id=972555314 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 01:08:28,562 - INFO - Update id=972555315 is handled. Duration 187 ms by bot id=6869227116
+2024-03-28 01:08:29,245 - INFO - Update id=972555316 is handled. Duration 61 ms by bot id=6869227116
+2024-03-28 01:08:42,684 - INFO - Update id=972555317 is handled. Duration 109 ms by bot id=6869227116
+2024-03-28 01:09:11,602 - INFO - Update id=972555318 is handled. Duration 281 ms by bot id=6869227116
+2024-03-28 01:09:14,314 - INFO - Update id=972555319 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 01:09:16,756 - INFO - Update id=972555320 is handled. Duration 297 ms by bot id=6869227116
+2024-03-28 01:09:24,122 - INFO - Update id=972555321 is handled. Duration 94 ms by bot id=6869227116
+2024-03-28 01:09:26,156 - INFO - Update id=972555322 is handled. Duration 311 ms by bot id=6869227116
+2024-03-28 01:09:29,027 - INFO - Update id=972555323 is handled. Duration 202 ms by bot id=6869227116
+2024-03-28 01:09:45,229 - INFO - Update id=972555324 is handled. Duration 281 ms by bot id=6869227116
+2024-03-28 01:09:48,561 - INFO - Update id=972555325 is handled. Duration 187 ms by bot id=6869227116
+2024-03-28 01:09:54,951 - INFO - Update id=972555326 is handled. Duration 94 ms by bot id=6869227116
+2024-03-28 01:10:06,968 - INFO - Update id=972555327 is handled. Duration 313 ms by bot id=6869227116
+2024-03-28 01:10:32,737 - INFO - Polling stopped
+2024-03-28 01:10:32,995 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:10:36,152 - INFO - Start polling
+2024-03-28 01:10:36,330 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:10:37,626 - INFO - Update id=972555328 is handled. Duration 250 ms by bot id=6869227116
+2024-03-28 01:10:39,347 - INFO - Update id=972555329 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:10:40,768 - INFO - Update id=972555330 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 01:10:42,174 - INFO - Update id=972555331 is handled. Duration 219 ms by bot id=6869227116
+2024-03-28 01:10:46,365 - INFO - Update id=972555332 is handled. Duration 77 ms by bot id=6869227116
+2024-03-28 01:10:48,953 - INFO - Update id=972555333 is handled. Duration 202 ms by bot id=6869227116
+2024-03-28 01:10:50,127 - INFO - Update id=972555334 is handled. Duration 312 ms by bot id=6869227116
+2024-03-28 01:10:52,148 - INFO - Update id=972555335 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:10:53,428 - INFO - Update id=972555336 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:10:55,185 - INFO - Update id=972555337 is handled. Duration 78 ms by bot id=6869227116
+2024-03-28 01:11:01,150 - INFO - Update id=972555338 is handled. Duration 140 ms by bot id=6869227116
+2024-03-28 01:11:55,667 - INFO - Polling stopped
+2024-03-28 01:11:55,929 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:11:59,072 - INFO - Start polling
+2024-03-28 01:11:59,227 - INFO - Run polling for bot @Event_Diarybot id=6869227116 - '≈жедневник'
+2024-03-28 01:12:00,020 - INFO - Update id=972555339 is handled. Duration 234 ms by bot id=6869227116
+2024-03-28 01:12:01,304 - INFO - Update id=972555340 is handled. Duration 109 ms by bot id=6869227116
+2024-03-28 01:12:03,344 - INFO - Update id=972555341 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:12:04,486 - INFO - Update id=972555342 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:12:06,444 - INFO - Update id=972555343 is handled. Duration 62 ms by bot id=6869227116
+2024-03-28 01:12:08,054 - INFO - Update id=972555344 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:12:09,371 - INFO - Update id=972555345 is handled. Duration 125 ms by bot id=6869227116
+2024-03-28 01:12:11,287 - INFO - Update id=972555346 is handled. Duration 108 ms by bot id=6869227116
+2024-03-28 01:12:14,620 - INFO - Update id=972555347 is handled. Duration 108 ms by bot id=6869227116
+2024-03-28 01:12:16,394 - INFO - Update id=972555348 is handled. Duration 77 ms by bot id=6869227116
+2024-03-28 01:12:53,772 - INFO - Update id=972555349 is handled. Duration 187 ms by bot id=6869227116
+2024-03-28 01:13:02,723 - INFO - Update id=972555350 is handled. Duration 0 ms by bot id=6869227116
+2024-03-28 01:14:05,789 - INFO - Polling stopped
+2024-03-28 01:14:06,039 - INFO - Polling stopped for bot @Event_Diarybot id=6869227116 - '≈жедневник'
