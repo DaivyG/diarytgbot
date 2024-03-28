@@ -253,9 +253,9 @@ async def change_datetime(datetime, id_):
     cur = conn.cursor()
 
     try:
-        cur.execute('''UPDATE events SET
-                   date_and_time = ?
-                   WHERE id = ?''', (datetime, id_))
+        cur.execute('''UPDATE events 
+                    SET date_and_time = ?
+                    WHERE id = ?''', (datetime, id_))
        
         cur.execute('''SELECT frequency
                     FROM dates_of_reminders
@@ -274,6 +274,27 @@ async def change_datetime(datetime, id_):
 
         conn.commit()
         return True
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+    
+async def change_frequency(frequency, id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f'''UPDATE dates_of_reminders
+                    SET frequency = ?
+                    WHERE event_id = ?''', (frequency, id_))
+
+        conn.commit()
+        return True
+    
     except Exception as e:
         print(f'Ошибка {e}')
         return False

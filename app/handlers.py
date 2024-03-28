@@ -283,6 +283,7 @@ async def edit_my_event(callback: CallbackQuery):
 class Edit_event(StatesGroup):
     change_full_text = State()
     change_datetime = State()
+    change_frequency = State()
 
 
 @router.callback_query(F.data == 'change_full_text')
@@ -335,7 +336,39 @@ async def change_datetime_last(message: Message, state: FSMContext):
         
         if await db.change_datetime(data['datetime'], _id):
             await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-
+            await state.clear()
+            return
+        
+        raise Exception('Ошибка при изменении даты и времени события')
 
     except Exception as e:
         message.answer(f'Что-то пошло не так: {e}')
+
+
+@router.callback_query(F.data == 'change_frequency')
+async def change_frequency_first(callback: CallbackQuery, state: FSMContext):
+    try:
+        await callback.answer()
+        await state.set_state(Edit_event.change_frequency)
+        await callback.message.answer(text='Пожалуйста, выберите нужную цикличность события', reply_markup=kb.frequency_of_event_keyboard)
+
+    except Exception as e:
+        await callback.message.answer(f'Ошибка: {e}')
+
+
+@router.message(Edit_event.change_frequency)
+async def change_frequency_last(message: Message, state: FSMContext):
+    try:
+        data = await state.update_data(frequency=message.text)
+
+        if await db.change_frequency(data['frequency'], _id):
+            await message.answer('Цикличность успешно изменена')
+            return
+        
+        raise Exception('Что-то пошло не так')
+
+    except Exception as e:
+        await message.answer(f'Произошла ошибка {e}')
+
+    finally:
+        await state.clear()

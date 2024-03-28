@@ -97,8 +97,8 @@ my_events_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 edit_my_event_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Изменить текст события', callback_data='change_full_text')], 
     [InlineKeyboardButton(text='Изменить дату и время события', callback_data='change_datetime')],
-    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')],
-    [InlineKeyboardButton(text='Добавить адресата', callback_data='add_recipient')],
-    [InlineKeyboardButton(text='Удалить адресата', callback_data='delete_recipient')],
-    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_reminder')]
+    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')], #
+    [InlineKeyboardButton(text='Добавить адресата', callback_data='add_recipient')], #
+    [InlineKeyboardButton(text='Удалить адресата', callback_data='delete_recipient')], #
+    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_reminder')] #
 ])
