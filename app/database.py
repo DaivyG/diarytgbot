@@ -302,3 +302,27 @@ async def change_frequency(frequency, id_):
     finally:
         cur.close()
         conn.close()
+
+
+async def edit_recipients(author, list_of_users, id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f'''DELETE FROM recipients
+                    WHERE event_id = ?''', (id_,))
+        
+        for user in list_of_users:
+            cur.execute('''INSERT INTO recipients (author_name, recipient_name, event_id)
+                        VALUES (?, ?, ?)''', (author, user.lower(), id_))
+
+        conn.commit()
+        return True
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()

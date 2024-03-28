@@ -97,8 +97,19 @@ my_events_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 edit_my_event_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Изменить текст события', callback_data='change_full_text')], 
     [InlineKeyboardButton(text='Изменить дату и время события', callback_data='change_datetime')],
-    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')], #
-    [InlineKeyboardButton(text='Добавить адресата', callback_data='add_recipient')], #
-    [InlineKeyboardButton(text='Удалить адресата', callback_data='delete_recipient')], #
+    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')], 
+    [InlineKeyboardButton(text='Изменить адресатов', callback_data='add_recipient')], #
     [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_reminder')] #
 ])
+
+
+async def edit_users_keyboard(users):
+    '''
+    Клавиатура для 
+    '''
+    keyboard = InlineKeyboardBuilder()
+    for user in users:
+        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'_add_user-{user[2]}'))
+    keyboard.add(InlineKeyboardButton(text='Все пользователи', callback_data='_add_user-all_users'))
+    keyboard.add(InlineKeyboardButton(text='Далее', callback_data='_add_user-next_step'))
+    return keyboard.adjust(2).as_markup()

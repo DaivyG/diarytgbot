@@ -12,6 +12,7 @@ import app.keyboards as kb
 
 admins = ['Dayviyo']
 router = Router()
+list_of_users = []
 
 
 @router.message(CommandStart())
@@ -70,7 +71,6 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
     await message.answer('Выберите получателей события', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
 
 
-list_of_users = []
 @router.callback_query(F.data.split('-')[0] == 'add_user')
 async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext):
     global list_of_users
@@ -87,7 +87,7 @@ async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext
 
     list_of_users = list(set(map(lambda x: x.capitalize(), list_of_users)))
     await callback.answer()
-    await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующий пользователей: {", ".join(list_of_users)}', reply_markup=None)
+    await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующих пользователей: {", ".join(list_of_users)}', reply_markup=None)
     await callback.message.answer('Введите описание события')
     await state.set_state(New_event.text_of_event)
     await state.update_data(recipients=list_of_users)
@@ -126,7 +126,6 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         Дата и время: {datetime},
         Цикличность повторения: {frequency},
         Получатели: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-        list_of_users.clear()
 
 
     except Exception as e:
@@ -135,6 +134,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
     finally:
         await state.clear()
+        await list_of_users.clear()
 
 
 @router.message(F.text == 'Админ панель')
@@ -284,7 +284,9 @@ class Edit_event(StatesGroup):
     change_full_text = State()
     change_datetime = State()
     change_frequency = State()
-
+    add_recipient = State()
+    delete_recipient = State()
+    delete_reminder = State()
 
 @router.callback_query(F.data == 'change_full_text')
 async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
@@ -372,3 +374,48 @@ async def change_frequency_last(message: Message, state: FSMContext):
 
     finally:
         await state.clear()
+
+
+@router.callback_query(F.data == 'add_recipient')
+async def add_recipient_first(callback: CallbackQuery):
+    try:
+        await callback.answer()
+        await callback.message.answer('Пожалуйста, выберите получател(я/ей), котор(ого/ых) хотите добавить', reply_markup=await kb.edit_users_keyboard(await db.look_at_db_users()))
+
+    except Exception as e:
+        await callback.message.answer(f'Произошла ошибка {e}')
+
+
+@router.callback_query(F.data.split('-')[0] == '_add_user')
+async def edit_recipients_at_event_second(callback: CallbackQuery, state: FSMContext):
+    global list_of_users
+
+    if callback.data.split('-')[1] == 'all_users':
+        await callback.answer()
+        for i in await db.look_at_db_users():
+            list_of_users.append(i[2])
+
+    elif callback.data.split('-')[1] != 'next_step':
+        await callback.answer()
+        list_of_users.append(callback.data.split('-')[1])
+        return
+
+    list_of_users = list(set(map(lambda x: x.capitalize(), list_of_users)))
+    await callback.answer()
+    await callback.message.edit_text(f'Сохраняем изменения. Вы выбрали следующих пользователей: {", ".join(list_of_users)}', reply_markup=None)
+    await state.update_data(recipients=list_of_users)
+
+    try:
+        data = await state.get_data()
+        print(callback.from_user.username, data['recipients'], _id)
+        if await db.edit_recipients(callback.from_user.username, data['recipients'], _id):
+            await callback.message.answer('Изменения успешно сохранены!')
+            return
+
+        raise Exception('Ошибка во время добавления получателя')
+
+    except Exception as e:
+        await callback.message.answer(f'Что-то пошло не так: {e}')
+
+    finally:
+        list_of_users.clear()
