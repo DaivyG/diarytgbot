@@ -19,7 +19,6 @@ list_of_users = []
 async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
-
 @router.message(F.text == 'Создать новое напоминание')
 async def create_new_event(message: Message):
     await message.answer('Хорошо, выберите способ создания напоминания', reply_markup=kb.second_keyboard)
@@ -134,7 +133,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
     finally:
         await state.clear()
-        await list_of_users.clear()
+        list_of_users.clear()
 
 
 @router.message(F.text == 'Админ панель')

@@ -4,6 +4,9 @@ import app.functions as func
 
 
 async def db_start():
+    '''
+    Создание таблиц в базе данных
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -17,7 +20,6 @@ async def db_start():
                         date_and_time DATETIME)''')
 
         cur.execute('''CREATE TABLE IF NOT EXISTS recipients (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         author_name VARCHAR(30),
                         recipient_name VARCHAR(30),
                         event_id INT NOT NULL,
@@ -25,7 +27,6 @@ async def db_start():
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
 
         cur.execute('''CREATE TABLE IF NOT EXISTS dates_of_reminders (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         event_datetime DATETIME,
                         frequency VARCHAR(20),
                         event_id INT NOT NULL,
@@ -36,6 +37,12 @@ async def db_start():
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username VARCHAR(30),
                         name VARCHAR(30))''')
+        
+        cur.execute('''CREATE TABLE IF NOT EXISTS done_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    datetime DATETIME,
+                    recipients TEXT,
+                    frequency VARCHAR(30))''')
 
         conn.commit()
 
@@ -48,6 +55,9 @@ async def db_start():
 
     
 async def create_new_event(data:dict):
+    '''
+    Создание нового события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -86,6 +96,9 @@ async def create_new_event(data:dict):
 
 
 async def look_at_db_users():
+    '''
+    Просмотр таблицы пользователей
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -106,6 +119,9 @@ async def look_at_db_users():
 
     
 async def add_at_db_users(data):
+    '''
+    Добавление пользователя в БД
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -124,6 +140,9 @@ async def add_at_db_users(data):
 
 
 async def del_from_db_users(data):
+    '''
+    Удаление пользователя из БД
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -141,6 +160,9 @@ async def del_from_db_users(data):
 
 
 async def look_at_db_events(name):
+    '''
+    Просмотр всех событий
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
     try:
@@ -169,6 +191,9 @@ async def look_at_db_events(name):
     
 
 async def username_to_name(username):
+    '''
+    Функция для преобразования username в имя
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -187,6 +212,9 @@ async def username_to_name(username):
 
     
 async def look_at_cur_event(event_name):
+    '''
+    Просмотр информации о конкретном событии
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -224,6 +252,9 @@ async def look_at_cur_event(event_name):
 
 
 async def change_full_text(text, id_):
+    '''
+    Смена полного текста конкретного события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -244,6 +275,9 @@ async def change_full_text(text, id_):
 
 
 async def change_datetime(datetime, id_):
+    '''
+    Смена даты и времении события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -279,6 +313,9 @@ async def change_datetime(datetime, id_):
 
     
 async def change_frequency(frequency, id_):
+    '''
+    Смена цикличности события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -300,6 +337,9 @@ async def change_frequency(frequency, id_):
 
 
 async def edit_recipients(author, list_of_users, id_):
+    '''
+    Смена получателей события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -324,6 +364,9 @@ async def edit_recipients(author, list_of_users, id_):
 
 
 async def delete_my_event(id_):
+    '''
+    Удаление события
+    '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
 
@@ -339,6 +382,29 @@ async def delete_my_event(id_):
 
         conn.commit()
         return True
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def look_at_dates_of_reminders():
+    '''
+    Просмотр дат и цикличности напоминаний к разным событиям
+    '''
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''SELECT * 
+                    FROM dates_of_reminders''')
+        
+        data = cur.fetchall()
+        return data
     
     except Exception as e:
         print(f'Ошибка {e}')
