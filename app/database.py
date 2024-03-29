@@ -1,11 +1,6 @@
 #TODO сделать отпрваыку пользователям по способу который выберет заказчик
 import sqlite3 as sq
 import app.functions as func
-import logging
-
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='logfile.log')
-logger = logging.getLogger(__name__)
 
 
 async def db_start():
@@ -133,7 +128,7 @@ async def del_from_db_users(data):
     cur = conn.cursor()
 
     try:
-        cur.execute(f'DELETE FROM users WHERE name="{data["name"]}"')
+        cur.execute(f'DELETE FROM users WHERE name=?', (data["name"],))
 
         conn.commit()
 
@@ -234,8 +229,8 @@ async def change_full_text(text, id_):
 
     try:
         cur.execute(f'''UPDATE events SET
-                    full_text = "{text}"
-                    WHERE id = {id_}''')
+                    full_text = ?
+                    WHERE id = ?''', (text, id_))
         
         conn.commit()
 
@@ -315,6 +310,32 @@ async def edit_recipients(author, list_of_users, id_):
         for user in list_of_users:
             cur.execute('''INSERT INTO recipients (author_name, recipient_name, event_id)
                         VALUES (?, ?, ?)''', (author, user.lower(), id_))
+
+        conn.commit()
+        return True
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def delete_my_event(id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute(f'''DELETE FROM events
+                    WHERE id = ?''', (id_,))
+        
+        cur.execute(f'''DELETE FROM dates_of_reminders
+                    WHERE event_id = ?''', (id_,))
+        
+        cur.execute(f'''DELETE FROM recipients
+                    WHERE event_id = ?''', (id_,))
 
         conn.commit()
         return True

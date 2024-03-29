@@ -407,7 +407,6 @@ async def edit_recipients_at_event_second(callback: CallbackQuery, state: FSMCon
 
     try:
         data = await state.get_data()
-        print(callback.from_user.username, data['recipients'], _id)
         if await db.edit_recipients(callback.from_user.username, data['recipients'], _id):
             await callback.message.answer('Изменения успешно сохранены!')
             return
@@ -419,3 +418,17 @@ async def edit_recipients_at_event_second(callback: CallbackQuery, state: FSMCon
 
     finally:
         list_of_users.clear()
+
+
+@router.callback_query(F.data == 'delete_my_event')
+async def delete_reminder(callback: CallbackQuery):
+    '''
+    Удаление события
+    '''
+    try:
+        await callback.answer()
+        if await db.delete_my_event(_id):
+            await callback.message.answer('Удаление успешно выполнено', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
+            
+    except Exception as e:
+        await callback.message.answer(f'Произошла ошибка: {e}')
