@@ -2,7 +2,6 @@
 import sqlite3 as sq
 import app.functions as func
 
-
 async def db_start():
     '''
     Создание таблиц в базе данных
@@ -27,6 +26,7 @@ async def db_start():
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
 
         cur.execute('''CREATE TABLE IF NOT EXISTS dates_of_reminders (
+                        period VARCHAR(20),
                         event_datetime DATETIME,
                         frequency VARCHAR(20),
                         event_id INT NOT NULL,
@@ -70,11 +70,10 @@ async def create_new_event(data:dict):
                     (data['text'], data['author'], _datetime))
 
         event_id = cur.lastrowid
-
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
-        for i in func.date_to_format(data.get('datetime')):
-            cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
-                        VALUES (?, ?, ?)''', (i, data['frequency'], event_id))
+        for k, v in func.date_to_format(data.get('datetime')).items():
+            cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
+                        VALUES (?, ?, ?, ?)''', (k, v, data['frequency'], event_id))
 
         # Вставляем данные в таблицу recipients
         for user in data['recipients']:
@@ -295,11 +294,11 @@ async def change_datetime(datetime, id_):
         cur.execute('''DELETE FROM dates_of_reminders
                     WHERE event_id = ?''', (id_,))
        
-        list_of_dates_reminders = func.date_to_format(datetime)
+        list_of_dates_reminders = func.date_to_format(datetime).items()
     
-        for i in list_of_dates_reminders:
-            cur.execute('''INSERT INTO dates_of_reminders (event_datetime, frequency, event_id)
-                        VALUES (?, ?, ?)''', (i, frequency, id_))
+        for k, v in list_of_dates_reminders:
+            cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
+                        VALUES (?, ?, ?, ?)''', (k, v, frequency, id_))
 
         conn.commit()
         return True
@@ -405,6 +404,41 @@ async def look_at_dates_of_reminders():
         
         data = cur.fetchall()
         return data
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def send_notification(event_id):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''SELECT heading
+                    FROM events
+                    WHERE id = ?''', (event_id,))
+        
+        heading = cur.fetchall()[0][0]
+
+        cur.execute('''SELECT recipient_name
+                    FROM recipients
+                    WHERE event_id = ?''', (event_id,))
+        
+        data = cur.fetchall()
+        data = [i[0] for i in data]
+
+        cur.execute(f'''SELECT username
+                    FROM users
+                    WHERE name IN ({', '.join(['?']*len(data))})''', data)
+        
+        usernames = cur.fetchall()
+        usernames = [i[0] for i in usernames]
+        return usernames, heading
     
     except Exception as e:
         print(f'Ошибка {e}')
