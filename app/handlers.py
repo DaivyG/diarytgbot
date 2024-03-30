@@ -18,6 +18,7 @@ list_of_users = []
 @router.message(CommandStart())
 async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+    await message.answer(f'чат ид: {message.chat.id}')
 
 @router.message(F.text == 'Создать новое напоминание')
 async def create_new_event(message: Message):
@@ -118,7 +119,9 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         if datetime is None:
             datetime = func.next_day_foo()
 
-        await db.create_new_event(data)
+        if not await db.create_new_event(data):
+            raise Exception
+    
         await message.answer(f'''Событие успешно создано со следующими параметрами:
         Username создателя события: {author},
         Описание события: {text},
@@ -127,9 +130,10 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         Получатели: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
 
+
     except Exception as e:
         print(f'Ошибка при создании события: {e}')
-        await message.answer('Произошла ошибка при создании события. Пожалуйста, повторите попытку.')
+        await message.answer(f'Произошла ошибка при создании события. Пожалуйста, повторите попытку.\n{e}')
 
     finally:
         await state.clear()

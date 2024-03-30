@@ -35,6 +35,8 @@ def date_to_format(event_date=None):
         reminders['3 дня'] = event_date - timedelta(days=3)
     if difference.days >= 1:
         reminders['1 день'] = event_date - timedelta(days=1)
-    reminders['1 час'] = event_date - timedelta(hours=1)
-
+    if difference.days == 0 and difference.total_seconds() // 3600 >= 1:
+        reminders['1 час'] = event_date - timedelta(hours=1)
+    if difference.days == 0 and difference.total_seconds() // 3600 < 1:
+        reminders['Сейчас'] = event_date
     return reminders

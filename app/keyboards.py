@@ -76,6 +76,10 @@ async def look_at_my_events(events):
     Клавиатура для нажатия на свои события
     '''
     keyboard = InlineKeyboardBuilder()
+    if events == 'У вас нет напоминаний' or events == 'Пользователь не найден':
+        keyboard.add(InlineKeyboardButton(text=events, callback_data='None'))
+        return keyboard.as_markup()
+
     for event in events:
         keyboard.add(InlineKeyboardButton(text=str(event[0]), callback_data=f'look_at_my_event-{event[0]}'))
 

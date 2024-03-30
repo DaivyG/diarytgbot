@@ -24,16 +24,19 @@ async def on_startup():
 async def send_message(usernames, period, heading):
     try:
         for username in usernames:
-            user = await bot.get_chat(username)
+            user = await bot.get_chat(f'@{username}')
+            print(user.id)
 
             await bot.send_message(user.id, f'До события {heading} осталось {period}')
+            return True
 
     except Exception as e:
         print(f'Что-то пошло не так: {e}')
 
-
+flag = True
 async def hourly_task():
-    while True:
+    global flag
+    while flag == True:
         try:
             data = await db.look_at_dates_of_reminders()
             if len(data) == 0:
@@ -54,16 +57,17 @@ async def hourly_task():
                 await asyncio.sleep(60 * 30)
 
             else:
-                while difference_total_seconds > 60:
-                    print('Уснул на 5 минут')
+                if difference_total_seconds > 60:
+                    print('Уснул на 30 sek')
                     print(difference_total_seconds)
-                    await asyncio.sleep(60 * 5)
-                
+                    await asyncio.sleep(30)
+
                 usernames, heading = await db.send_notification(nearest[-1])
                 period = nearest[0]
-
+                
+                print(usernames, period, heading)
                 await send_message(usernames, period, heading)
-        
+    
         except Exception as e:
             print(f'Ошибка при отправке уведомления {e}')
 
