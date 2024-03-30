@@ -21,22 +21,23 @@ async def on_startup():
         print(f'Ошибка при создании БД: {e}')
 
 
-async def send_message(usernames, period, heading):
+async def send_message(chat_ids, period, heading, _id):
     try:
-        for username in usernames:
-            user = await bot.get_chat(f'@{username}')
-            print(user.id)
-
-            await bot.send_message(user.id, f'До события {heading} осталось {period}')
-            return True
+        for chat_id in chat_ids:
+            await bot.send_message(chat_id, f'До события {heading} осталось {period}')
+        
+        '''
+        Вместо простого удаления нужно сделать чтобы информация переносилась в выполненные события, и в зависимости от цикличности менялась дата
+        '''
+        await db.delete_my_event(_id)
+        return True
 
     except Exception as e:
         print(f'Что-то пошло не так: {e}')
 
-flag = True
+
 async def hourly_task():
-    global flag
-    while flag == True:
+    while True:
         try:
             data = await db.look_at_dates_of_reminders()
             if len(data) == 0:
@@ -62,11 +63,11 @@ async def hourly_task():
                     print(difference_total_seconds)
                     await asyncio.sleep(30)
 
-                usernames, heading = await db.send_notification(nearest[-1])
+                chat_ids, heading = await db.send_notification(nearest[-1])
                 period = nearest[0]
                 
-                print(usernames, period, heading)
-                await send_message(usernames, period, heading)
+                print(chat_ids, period, heading)
+                await send_message(chat_ids, period, heading, nearest[-1])
     
         except Exception as e:
             print(f'Ошибка при отправке уведомления {e}')

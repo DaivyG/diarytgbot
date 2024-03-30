@@ -221,7 +221,7 @@ async def look_at_cur_event(event_name):
     cur = conn.cursor()
 
     try:
-        cur.execute('''SELECT * 
+        cur.execute('''SELECT *
                     FROM events 
                     WHERE heading=?''', (event_name,))
 
@@ -243,7 +243,7 @@ async def look_at_cur_event(event_name):
             return data, recipients, frequency
 
         else:
-            return None, None
+            return None
 
     except Exception as e:
         print(f'Ошибка {e}')
@@ -435,13 +435,13 @@ async def send_notification(event_id):
         data = cur.fetchall()
         data = [i[0] for i in data]
 
-        cur.execute(f'''SELECT username
+        cur.execute(f'''SELECT chat_id
                     FROM users
                     WHERE name IN ({', '.join(['?']*len(data))})''', data)
         
-        usernames = cur.fetchall()
-        usernames = [i[0] for i in usernames]
-        return usernames, heading
+        chat_ids = cur.fetchall()
+        chat_ids = [i[0] for i in chat_ids]
+        return chat_ids, heading
     
     except Exception as e:
         print(f'Ошибка {e}')
@@ -471,3 +471,19 @@ async def add_chat_id_at_db_users(username, chat_id):
     finally:
         cur.close()
         conn.close()
+
+
+# async def done_reminders():
+#     conn = sq.connect('tg.db')
+#     cur = conn.cursor()
+
+#     try:
+#         cur.execute('''''')
+    
+#     except Exception as e:
+#         print(f'Ошибка {e}')
+#         return False
+
+#     finally:
+#         cur.close()
+#         conn.close()
