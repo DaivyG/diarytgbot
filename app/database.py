@@ -36,7 +36,8 @@ async def db_start():
         cur.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         username VARCHAR(30),
-                        name VARCHAR(30))''')
+                        name VARCHAR(30),
+                        chat_id VARCHAR(40))''')
         
         cur.execute('''CREATE TABLE IF NOT EXISTS done_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,7 +108,7 @@ async def look_at_db_users():
         data = cur.fetchall()
 
         if data:
-            return list(data)
+            return data
 
     except Exception as e:
         print(f'Ошибка {e}')
@@ -125,13 +126,15 @@ async def add_at_db_users(data):
     cur = conn.cursor()
 
     try:
-        cur.execute('''INSERT INTO users (username, name) 
-                    VALUES (?, ?)''', (data['username'], data['name']))
+        cur.execute('''INSERT INTO users (username, name, chat_id)
+                    VALUES (?, ?, ?)''', (data['username'], data['name'], data.get('chat_id', 'Еще не регистрировался')))
 
         conn.commit()
+        return True
 
     except Exception as e:
         print(f'Ошибка {e}')
+        return False
 
     finally:
         cur.close()
@@ -439,6 +442,27 @@ async def send_notification(event_id):
         usernames = cur.fetchall()
         usernames = [i[0] for i in usernames]
         return usernames, heading
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def add_chat_id_at_db_users(username, chat_id):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''UPDATE users
+                    SET chat_id = ?
+                    WHERE username = ?''', (chat_id, username))
+        
+        conn.commit()
+        return True
     
     except Exception as e:
         print(f'Ошибка {e}')

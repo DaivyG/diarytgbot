@@ -20,6 +20,15 @@ async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
     await message.answer(f'чат ид: {message.chat.id}')
 
+    data = await db.look_at_db_users()
+    if len(data) != 0:
+        dict_of_status = {i[1]:i[-1] for i in data}
+        username = message.from_user.username
+        if username in dict_of_status.keys() and dict_of_status[username] == 'Еще не регистрировался':
+            await db.add_chat_id_at_db_users(username, message.chat.id)
+            print('Успешно добавлен чат id')
+        
+
 @router.message(F.text == 'Создать новое напоминание')
 async def create_new_event(message: Message):
     await message.answer('Хорошо, выберите способ создания напоминания', reply_markup=kb.second_keyboard)
@@ -98,7 +107,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
     Сохранение описания события, чата id и username автора
     '''
     global list_of_users
-    await state.update_data(text=message.text, chat_id=message.chat.id, author=message.from_user.username)
+    await state.update_data(text=message.text, author=message.from_user.username)
     data = await state.get_data()
 
     try:
@@ -189,8 +198,9 @@ async def add_at_db_second(message: Message, state: FSMContext):
     data = await state.get_data()
 
     try:
-        await db.add_at_db_users(data)
-
+        if not await db.add_at_db_users(data):
+            raise Exception
+        
         await message.answer(f'Сохранение успешно! Пользователь {data["name"].capitalize()} сохранен с никнеймом {data["username"]}', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
         print('Пользователь успешно сохранен')
 
