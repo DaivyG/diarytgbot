@@ -119,13 +119,13 @@ async def edit_users_keyboard(users):
     return keyboard.adjust(2).as_markup()
 
 
-# async def del_users_keyboard(users):
-#     '''
-#     Клавиатура для удаления пользователя из базы данных 
-#     '''
-#     keyboard = InlineKeyboardBuilder()
-#     for user in users:
-#         keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'del_user-{user[2]}'))
-#     keyboard.add(InlineKeyboardButton(text='Все пользователи', callback_data='del_user-all_users'))
-#     keyboard.add(InlineKeyboardButton(text='Далее', callback_data='del_user-next_step'))
-#     return keyboard.adjust(2).as_markup()
+async def del_users_keyboard(users):
+    '''
+    Клавиатура для удаления пользователя из базы данных 
+    '''
+    keyboard = InlineKeyboardBuilder()
+    for user in users:
+        keyboard.add(InlineKeyboardButton(text=str(user[2]), callback_data=f'del_user-{user[2]}'))
+    keyboard.add(InlineKeyboardButton(text='Все пользователи', callback_data='del_user-all_users'))
+    keyboard.add(InlineKeyboardButton(text='Далее', callback_data='del_user-next_step'))
+    return keyboard.adjust(2).as_markup()

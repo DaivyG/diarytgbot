@@ -149,12 +149,15 @@ async def del_from_db_users(data):
     cur = conn.cursor()
 
     try:
-        cur.execute(f'DELETE FROM users WHERE name=?', (data["name"],))
+        for i in data:
+            cur.execute(f'DELETE FROM users WHERE name=?', (i,))
 
         conn.commit()
-
+        return True
+    
     except Exception as e:
         print(f'Ошибка {e}')
+        return False
 
     finally:
         cur.close()

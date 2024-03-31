@@ -194,7 +194,7 @@ async def add_at_db_last(message: Message, state: FSMContext):
 
 @router.message(New_user.username)
 async def add_at_db_second(message: Message, state: FSMContext):
-    if all(char.isalpha() and char.isascii() for char in message.text) is False and message.text[0] == '@':
+    if not all(char.isalpha() and char.isascii() for char in message.text[1:]) and message.text[0] == '@':
         await state.set_state(New_user.username)
         await message.answer('Что-то пошло не так. Проверьте корректность введенного username. Ввод должен начинаться со знака "@".')
         return
@@ -221,30 +221,45 @@ class Delete_user(StatesGroup):
 
 
 @router.callback_query(F.data == 'del_from_db')
-async def del_from_db_first(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Delete_user.name)
+async def del_from_db_first(callback: CallbackQuery):
     await callback.answer('Вы выбрали удалить пользователя')
-    await callback.message.answer('Пожалуйста, введите имя пользователя, которого хотите удалить')
+    await callback.message.answer('Пожалуйста, выберите пользователя, которого хотите удалить', reply_markup=await kb.del_users_keyboard(await db.look_at_db_users()))
 
 
-@router.message(Delete_user.name)
-async def del_from_db_last(message: Message, state: FSMContext):
-    '''
-    Сохранение имени для удаления пользователя из таблицы users
-    '''
-    await state.update_data(name=message.text.lower())
-    data = await state.get_data()
+@router.callback_query(F.data.split('-')[0] == 'del_user')
+async def del_user(callback: CallbackQuery):
+    global list_of_users
+
+    if callback.data.split('-')[1] == 'all_users':
+        await callback.answer()
+        for i in await db.look_at_db_users():
+            list_of_users.append(i[2])
+
+    elif callback.data.split('-')[1] != 'next_step':
+        await callback.answer()
+        list_of_users.append(callback.data.split('-')[1])
+        return
+
+    if not list_of_users:
+        await callback.answer()
+        await callback.message.edit_text('Вы не выбрали пользователя для удаления.')
+        return 
+
+    list_of_users = list(set(list_of_users))
+    await callback.message.edit_text(f'Сохраняем изменения. Вы выбрали следующих пользователей: {", ".join(list_of_users)}', reply_markup=None)
 
     try:
-        await db.del_from_db_users(data)
+        if await db.del_from_db_users(list_of_users):
+            await callback.message.answer('Выбранные пользователи успешно удалены!')
+            return
 
-        await message.answer(f'Удаление успешно! Пользователь с именем {data["name"].capitalize()} удален', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+        raise Exception('Ошибка во время удаления пользователя')
 
     except Exception as e:
-        print(f'Ошибка {e}')
+        await callback.message.answer(f'Что-то пошло не так: {e}')
 
     finally:
-        await state.clear()
+        list_of_users.clear()
 
 
 @router.message(F.text == 'Мои напоминания')
