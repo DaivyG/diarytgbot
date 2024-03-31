@@ -7,10 +7,11 @@ from aiogram.fsm.context import FSMContext
 import app.functions as func
 import app.database as db
 import app.keyboards as kb
+import asyncio
 
 #!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
-admins = ['Dayviyo']
+admins = ['Dayviyo', 'iozephK']
 router = Router()
 list_of_users = []
 
@@ -18,7 +19,6 @@ list_of_users = []
 @router.message(CommandStart())
 async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-    await message.answer(f'чат ид: {message.chat.id}')
 
     data = await db.look_at_db_users()
     if len(data) != 0:
@@ -92,6 +92,11 @@ async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext
     elif callback.data.split('-')[1] != 'next_step':
         await callback.answer()
         list_of_users.append(callback.data.split('-')[1])
+        return
+
+    if not list_of_users:
+        await callback.answer()
+        await callback.message.edit_text('Вы не выбрали ни одного пользователя', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
         return
 
     list_of_users = list(set(map(lambda x: x.capitalize(), list_of_users)))
@@ -183,15 +188,15 @@ async def add_at_db_first(callback: CallbackQuery, state: FSMContext):
 @router.message(New_user.name)
 async def add_at_db_last(message: Message, state: FSMContext):
     await state.update_data(name=message.text.lower())
-    await message.answer('Теперь введите username пользователя')
+    await message.answer('Теперь введите username пользователя. Начала никнейма должно начинаться с "@".')
     await state.set_state(New_user.username)
 
 
 @router.message(New_user.username)
 async def add_at_db_second(message: Message, state: FSMContext):
-    if all(char.isalpha() and char.isascii() for char in message.text) is False:
+    if all(char.isalpha() and char.isascii() for char in message.text) is False and message.text[0] == '@':
         await state.set_state(New_user.username)
-        await message.answer('Что-то пошло не так. Проверьте корректность введенного username')
+        await message.answer('Что-то пошло не так. Проверьте корректность введенного username. Ввод должен начинаться со знака "@".')
         return
 
     await state.update_data(username=message.text)

@@ -1,5 +1,4 @@
 import asyncio
-import schedule
 
 from aiogram import Bot, Dispatcher
 from config import TOKEN
@@ -10,6 +9,7 @@ from datetime import datetime, timedelta
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+#при нажатии далее если ни один пользователь не выбран бот работает дальше
 
 async def on_startup():
     '''
@@ -25,7 +25,6 @@ async def send_message(chat_ids, period, heading, _id):
     try:
         for chat_id in chat_ids:
             await bot.send_message(chat_id, f'До события {heading} осталось {period}')
-        
         '''
         Вместо простого удаления нужно сделать чтобы информация переносилась в выполненные события, и в зависимости от цикличности менялась дата
         '''
