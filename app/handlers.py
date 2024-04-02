@@ -1,14 +1,18 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery 
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, \
+    get_user_locale
+from datetime import datetime
+from aiogram.filters.callback_data import CallbackData
 
+import aiogram_calendar
 import app.functions as func
 import app.database as db
 import app.keyboards as kb
 
-#!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
 admins = ['Dayviyo', 'iozephK']
 router = Router()
@@ -45,22 +49,40 @@ async def fast_creating_first_step(message: Message, state: FSMContext):
 
 
 @router.message(F.text == 'Обычное создание напоминания')
-async def usual_creating_first_step(message: Message, state: FSMContext):
-    await state.set_state(New_event.date_and_time)
-    await message.answer('Введите дату и время события в формате "01.01.0001 01:01".')
+async def usual_creating_first_step(message: Message):
+    await message.answer('Выберите дату', reply_markup=await aiogram_calendar.SimpleCalendar(locale=await get_user_locale(message.from_user)).start_calendar())
+
+
+@router.callback_query(SimpleCalendarCallback.filter())
+async def process_simple_calendar(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    calendar = SimpleCalendar(
+        locale=await get_user_locale(callback_query.from_user), show_alerts=True
+    )
+    calendar.set_dates_range(datetime(2024, 1, 1), datetime(2027, 12, 31))
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+    if selected:
+        await state.update_data(date_of_event=date)
+        await state.set_state(New_event.date_and_time)
+        await callback_query.message.answer(
+            f'Вы выбрали {date.strftime("%d.%m.%Y")}')
+        await callback_query.message.answer('Введите время в формате 01:01')
+
 
 
 @router.message(New_event.date_and_time)
 async def usual_creating_second_step(message: Message, state: FSMContext):
-    '''
-    Сохранение даты и времени
-    '''
-    if not await func.validate_date_time(message.text):
+    data = await state.get_data()
+    date:datetime = data['date_of_event']
+    time = datetime.strptime(message.text, '%H:%M')
+
+    datetime_of_event = datetime(date.year, date.month, date.day, time.hour, time.minute).strftime('%d.%m.%Y %H:%M')
+    print(datetime_of_event)
+    if not await func.validate_date_time(datetime_of_event):
         await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
         await state.set_state(New_event.date_and_time)
         return
 
-    await state.update_data(datetime=message.text)
+    await state.update_data(datetime=datetime_of_event)
     await state.set_state(New_event.frequency)
     await message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
 

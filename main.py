@@ -21,23 +21,25 @@ async def on_startup():
         print(f'Ошибка при создании БД: {e}')
 
 
-async def send_message(chat_ids, heading, period, datetime_of_event:datetime, _id, frequency):
+async def send_message(chat_ids, heading, period, datetime_of_event:datetime, frequency, _id):
     try:
         for chat_id in chat_ids:
             await bot.send_message(chat_id, [f'До события {heading} осталось {period}', f'Событие {heading} только что наступило'][period == 'Сейчас'])
         
-        if period == 'Сейчас':
-            if frequency == 'Единично':
-                await db.delete_my_event(_id)
-            elif frequency == 'Ежедневно':
-                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.day + 1), _id)
-            elif frequency == 'Еженедельно':
-                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.day + 7), _id)
-            elif frequency == 'Ежемесячно':
-                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.month + 1), _id)
-            elif frequency == 'Ежегодно':
-                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.year + 1), _id)
-
+        # if period == 'Сейчас':
+        #     if frequency == 'Единично':
+        #         await db.delete_my_event(_id)
+        #     elif frequency == 'Ежедневно':
+        #         await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 1)), _id)
+        #     elif frequency == 'Еженедельно':
+        #         await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 7)), _id)
+        #     elif frequency == 'Ежемесячно':
+        #         await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.month + 1)), _id)
+        #     elif frequency == 'Ежегодно':
+        #         await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.year + 1)), _id)
+        # return True
+            
+        await db.delete_my_event(_id)
         return True
 
     except Exception as e:
@@ -50,7 +52,7 @@ async def hourly_task():
         try:
             data = await db.look_at_dates_of_reminders()
             if not data:
-                print('Нет дат для напоминаний, уснул на 1 минуту')
+                print('Нет даты для напоминаний, уснул на 1 минуту')
                 await asyncio.sleep(60)
                 continue
         
@@ -69,8 +71,10 @@ async def hourly_task():
             if await send_message(chat_ids, heading, *nearest):
                 print('Все прошло успешно')
                 continue
+            else:
+                print('Что-то пошло не так при отправке уведомления')
+                continue
             
-            print('Что-то пошло не так при отправке уведомления')
     
         except Exception as e:
             print(f'Ошибка при отправке уведомления {e}')
