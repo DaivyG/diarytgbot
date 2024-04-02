@@ -5,8 +5,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 Клавиатура для команды старт
 '''
 initial_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Создать новое напоминание')],
-    [KeyboardButton(text='Мои напоминания')]
+    [KeyboardButton(text='Мои напоминания')],
+    [KeyboardButton(text='Обычное создание напоминания')],
+    [KeyboardButton(text='Быстрое создание напоминания')],
 ], resize_keyboard=True, one_time_keyboard=True)
 
 
@@ -14,20 +15,11 @@ initial_keyboard = ReplyKeyboardMarkup(keyboard=[
 Клавиатура для команды старт для админа
 '''
 admin_initial_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Создать новое напоминание')],
     [KeyboardButton(text='Мои напоминания')],
+    [KeyboardButton(text='Обычное создание напоминания')],
+    [KeyboardButton(text='Быстрое создание напоминания')],
     [KeyboardButton(text='Админ панель')]
 ], resize_keyboard=True, one_time_keyboard=True)
-
-
-'''
-Клавиатура после нажатия на "создать новое напоминание"
-'''
-second_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Быстрое создание')],
-    [KeyboardButton(text='Обычное создание')]
-], resize_keyboard=True, one_time_keyboard=True)
-
 
 '''
 Клавиатура для выбора цикличности

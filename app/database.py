@@ -41,6 +41,7 @@ async def db_start():
         
         cur.execute('''CREATE TABLE IF NOT EXISTS done_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name_of_event TEXT,
                     datetime DATETIME,
                     recipients TEXT,
                     frequency VARCHAR(30))''')
@@ -476,17 +477,17 @@ async def add_chat_id_at_db_users(username, chat_id):
         conn.close()
 
 
-# async def done_reminders():
-#     conn = sq.connect('tg.db')
-#     cur = conn.cursor()
+async def done_reminders(chat_ids, heading, _id, ):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
 
-#     try:
-#         cur.execute('''''')
+    try:
+        cur.execute('''''')
     
-#     except Exception as e:
-#         print(f'Ошибка {e}')
-#         return False
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
 
-#     finally:
-#         cur.close()
-#         conn.close()
+    finally:
+        cur.close()
+        conn.close()

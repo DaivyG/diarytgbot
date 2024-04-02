@@ -21,52 +21,56 @@ async def on_startup():
         print(f'Ошибка при создании БД: {e}')
 
 
-async def send_message(chat_ids, period, heading, _id):
+async def send_message(chat_ids, heading, period, datetime_of_event:datetime, _id, frequency):
     try:
         for chat_id in chat_ids:
-            await bot.send_message(chat_id, f'До события {heading} осталось {period}')
-        '''
-        Вместо простого удаления нужно сделать чтобы информация переносилась в выполненные события, и в зависимости от цикличности менялась дата
-        '''
-        await db.delete_my_event(_id)
+            await bot.send_message(chat_id, [f'До события {heading} осталось {period}', f'Событие {heading} только что наступило'][period == 'Сейчас'])
+        
+        if period == 'Сейчас':
+            if frequency == 'Единично':
+                await db.delete_my_event(_id)
+            elif frequency == 'Ежедневно':
+                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.day + 1), _id)
+            elif frequency == 'Еженедельно':
+                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.day + 7), _id)
+            elif frequency == 'Ежемесячно':
+                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.month + 1), _id)
+            elif frequency == 'Ежегодно':
+                await db.change_datetime(datetime_of_event.replace(day=datetime_of_event.year + 1), _id)
+
         return True
 
     except Exception as e:
         print(f'Что-то пошло не так: {e}')
+        return False
 
 
 async def hourly_task():
     while True:
         try:
             data = await db.look_at_dates_of_reminders()
-            if len(data) == 0:
-                print('Нет дат для напоминаний, уснул на 3 минуты')
-                await asyncio.sleep(60 * 3)
+            if not data:
+                print('Нет дат для напоминаний, уснул на 1 минуту')
+                await asyncio.sleep(60)
+                continue
         
             nearest = min(map(lambda x: (x[0], datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'), x[2], x[3]), data), key=lambda x: x[1])
 
             difference:timedelta = nearest[1] - datetime.now()
             difference_total_seconds = difference.total_seconds()
 
-            if difference_total_seconds > 3600:
-                print('Уснул на час')
-                await asyncio.sleep(60 * 60)
+            if difference_total_seconds > 60:
+                print('Уснул на 1 минуту')
+                await asyncio.sleep(60)
+                continue
 
-            elif difference_total_seconds > 1800 and difference_total_seconds <= 3600:
-                print('Уснул на 30 минут')
-                await asyncio.sleep(60 * 30)
-
-            else:
-                if difference_total_seconds > 60:
-                    print('Уснул на 30 sek')
-                    print(difference_total_seconds)
-                    await asyncio.sleep(30)
-
-                chat_ids, heading = await db.send_notification(nearest[-1])
-                period = nearest[0]
-                
-                print(chat_ids, period, heading)
-                await send_message(chat_ids, period, heading, nearest[-1])
+            chat_ids, heading = await db.send_notification(nearest[-1])
+            
+            if await send_message(chat_ids, heading, *nearest):
+                print('Все прошло успешно')
+                continue
+            
+            print('Что-то пошло не так при отправке уведомления')
     
         except Exception as e:
             print(f'Ошибка при отправке уведомления {e}')

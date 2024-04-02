@@ -7,7 +7,6 @@ from aiogram.fsm.context import FSMContext
 import app.functions as func
 import app.database as db
 import app.keyboards as kb
-import asyncio
 
 #!!!!!!!Обязательно сделать проверку ввода даты и обработку ошибок то есть откат действия назад
 
@@ -22,16 +21,11 @@ async def start(message: Message):
 
     data = await db.look_at_db_users()
     if len(data) != 0:
-        dict_of_status = {i[1]:i[-1] for i in data}
+        dict_of_status = {i[1][1:]:i[-1] for i in data}
         username = message.from_user.username
         if username in dict_of_status.keys() and dict_of_status[username] == 'Еще не регистрировался':
-            await db.add_chat_id_at_db_users(username, message.chat.id)
+            await db.add_chat_id_at_db_users(f'@{username}', message.chat.id)
             print('Успешно добавлен чат id')
-        
-
-@router.message(F.text == 'Создать новое напоминание')
-async def create_new_event(message: Message):
-    await message.answer('Хорошо, выберите способ создания напоминания', reply_markup=kb.second_keyboard)
 
 
 class New_event(StatesGroup):
@@ -44,13 +38,13 @@ class New_event(StatesGroup):
     recipients = State()
 
 
-@router.message(F.text == 'Быстрое создание')
+@router.message(F.text == 'Быстрое создание напоминания')
 async def fast_creating_first_step(message: Message, state: FSMContext):
     await state.set_state(New_event.text_of_event)
     await message.answer('Введите описание события')
 
 
-@router.message(F.text == 'Обычное создание')
+@router.message(F.text == 'Обычное создание напоминания')
 async def usual_creating_first_step(message: Message, state: FSMContext):
     await state.set_state(New_event.date_and_time)
     await message.answer('Введите дату и время события в формате "01.01.0001 01:01".')
@@ -123,7 +117,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         recipients = data.get('recipients')
 
         if recipients is None:
-            recipients = await db.username_to_name(message.from_user.username)
+            recipients = await db.username_to_name(f'@{message.from_user.username}')
             data['recipients'] = [recipients]
 
         else:
