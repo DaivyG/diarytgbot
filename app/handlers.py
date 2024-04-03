@@ -203,13 +203,13 @@ async def add_at_db_first(callback: CallbackQuery, state: FSMContext):
 @router.message(New_user.name)
 async def add_at_db_last(message: Message, state: FSMContext):
     await state.update_data(name=message.text.lower())
-    await message.answer('Теперь введите username пользователя. Начала никнейма должно начинаться с "@".')
+    await message.answer('Теперь введите username пользователя. Начало никнейма должно начинаться с "@".')
     await state.set_state(New_user.username)
 
 
 @router.message(New_user.username)
 async def add_at_db_second(message: Message, state: FSMContext):
-    if not all(char.isalpha() and char.isascii() for char in message.text[1:]) and message.text[0] == '@':
+    if not all((char.isalpha() or char.isdigit()) and char.isascii() for char in message.text[1:]) and message.text[0] == '@':
         await state.set_state(New_user.username)
         await message.answer('Что-то пошло не так. Проверьте корректность введенного username. Ввод должен начинаться со знака "@".')
         return
