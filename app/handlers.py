@@ -76,7 +76,6 @@ async def usual_creating_second_step(message: Message, state: FSMContext):
     time = datetime.strptime(message.text, '%H:%M')
 
     datetime_of_event = datetime(date.year, date.month, date.day, time.hour, time.minute).strftime('%d.%m.%Y %H:%M')
-    print(datetime_of_event)
     if not await func.validate_date_time(datetime_of_event):
         await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
         await state.set_state(New_event.date_and_time)
@@ -280,8 +279,7 @@ async def del_user(callback: CallbackQuery):
 
 @router.message(F.text == 'Мои напоминания')
 async def admin_panel(message: Message):
-    data = await db.look_at_db_events(message.from_user.username)
-    await message.answer('На данный момент у вас следующие напоминания: ', reply_markup=await kb.look_at_my_events(data))
+    await message.answer('На данный момент у вас следующие напоминания: ', reply_markup=await kb.look_at_my_events(await db.look_at_db_events(f'@{message.from_user.username}')))
     await message.answer('При нажатии на любое из напоминаний вам высветиться полная информация о нем', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
 

@@ -65,7 +65,7 @@ async def add_users_keyboard(users):
 
 async def look_at_my_events(events):
     '''
-    Клавиатура для нажатия на свои события
+    Клавиатура для просмотра своих событий
     '''
     keyboard = InlineKeyboardBuilder()
     if events == 'У вас нет напоминаний' or events == 'Пользователь не найден':
