@@ -16,7 +16,7 @@ async def validate_date_time(date_time_str):
 def next_day_foo():
     next_day = datetime.now() + timedelta(days=1)
     return next_day.replace(hour=9, minute=0, second=0, microsecond=0).strftime('%d.%m.%Y %H:%M')
-    
+
     
 def date_to_format(event_date=None):
     now = datetime.now()
@@ -27,7 +27,6 @@ def date_to_format(event_date=None):
 
     event_date = datetime.strptime(event_date, '%d.%m.%Y %H:%M')
     difference = event_date - now
-    print(f'Разница - {difference.days, difference.total_seconds()}')
 
     reminders = {}
     if difference.days > 7:
