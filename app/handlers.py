@@ -91,6 +91,10 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
     '''
     Сохранение цикличности
     '''
+    if not message.text in ['Единично', 'Ежедневно', 'Еженедельно', 'Ежемесячно', 'Ежегодно']:
+        await message.answer('Что-то пошло не так. Выберите один из предложенных вариантов:', reply_markup=kb.frequency_of_event_keyboard)
+        return
+
     await state.update_data(frequency=message.text)
     await message.answer('Выберите получателей события', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
 

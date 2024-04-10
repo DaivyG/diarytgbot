@@ -1,4 +1,4 @@
 '''
 Токен телеграм бота
 '''
-TOKEN = '6869227116:AAGN5YIqOr_2ooUncbuKrtBCtUVp8_bwRK0' 
+TOKEN = '6869227116:AAHq5aNnctZyLN9YqVqOf_m_zCRCC-y5Wzs' 

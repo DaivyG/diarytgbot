@@ -57,8 +57,8 @@ async def hourly_task():
         try:
             data = await db.look_at_dates_of_reminders()
             if not data:
-                print('Нет даты для напоминаний, уснул на 1 минуту')
-                await asyncio.sleep(60)
+                print('Нет даты для напоминаний, уснул на 30 минут')
+                await asyncio.sleep(60 * 30)
                 continue
         
             nearest = min(map(lambda x: (x[0], datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'), x[2], x[3]), data), key=lambda x: x[1])
@@ -66,9 +66,9 @@ async def hourly_task():
             difference:timedelta = nearest[1] - datetime.now()
             difference_total_seconds = difference.total_seconds()
 
-            if difference_total_seconds > 60:
-                print('Уснул на 1 минуту')
-                await asyncio.sleep(60)
+            if difference_total_seconds > 60 * 10:
+                print('Есть напоминания, уснул на 10 минут')
+                await asyncio.sleep(60 * 10)
                 continue
             
             else:
