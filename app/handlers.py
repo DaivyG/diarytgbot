@@ -24,7 +24,7 @@ async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
     data = await db.look_at_db_users()
-    if len(data) != 0:
+    if not data is None:
         dict_of_status = {i[1][1:]:i[-1] for i in data}
         username = message.from_user.username
         if username in dict_of_status.keys() and dict_of_status[username] == 'Еще не регистрировался':
@@ -62,12 +62,17 @@ async def process_simple_calendar(callback_query: CallbackQuery, callback_data: 
     selected, date = await calendar.process_selection(callback_query, callback_data)
     if selected:
         await state.update_data(date_of_event=date)
-        await state.set_state(New_event.date_and_time)
         await callback_query.message.answer(
             f'Вы выбрали {date.strftime("%d.%m.%Y")}')
         await callback_query.message.answer('Введите время в формате 01:01')
 
+        print(await state.get_state())
+        if await state.get_state() is None:
+            await state.set_state(New_event.date_and_time)
 
+        else:
+            await state.set_state(Edit_event.change_time)
+        
 
 @router.message(New_event.date_and_time)
 async def usual_creating_second_step(message: Message, state: FSMContext):
@@ -125,6 +130,7 @@ async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext
     await state.set_state(New_event.text_of_event)
     await state.update_data(recipients=list_of_users)
 
+
 @router.message(New_event.text_of_event)
 async def usual_creating_last_step(message: Message, state: FSMContext):
     '''
@@ -156,13 +162,11 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
             raise Exception
     
         await message.answer(f'''Событие успешно создано со следующими параметрами:
-        Username создателя события: {author},
-        Описание события: {text},
-        Дата и время: {datetime},
-        Цикличность повторения: {frequency},
-        Получатели: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-
-
+        Username создателя события: <b>@{author}</b>,
+        Описание события: <b>{text}</b>,
+        Дата и время: <b>{datetime}</b>,
+        Цикличность повторения: <b>{frequency}</b>,
+        Получатели: <b>{recipients}</b>''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
     except Exception as e:
         print(f'Ошибка при создании события: {e}')
@@ -306,17 +310,21 @@ async def select_one_of_events(callback: CallbackQuery):
 
         recipients = ', '.join(unpacked_recipients)
 
-        await callback.message.answer(text=f'''Полный текст события: {full_text},
-Краткое описание события: {small_text},
-Время создания события: {datetime_of_creating},
-Время самого события: {datetime_of_event},
-Цикличность события: {frequency},
-Автор события: {author_username},
-Получатели события: {recipients}''', reply_markup=kb.my_events_inline_keyboard)
+        await callback.message.answer(text=f'''{small_text}
+                                      
+Полный текст: <b>{full_text}</b>,
+Создано: <b>{datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y %H:%M')}</b>,
+Напоминание: <b>{datetime_of_event}</b>,
+Цикличность события: <b>{frequency}</b>,
+Автор события: <b>@{author_username}</b>,
+Получатели события: <b>{recipients}</b>''', reply_markup=kb.my_events_inline_keyboard)
 
+
+    except TypeError:
+        await callback.message.answer(text='Данное событие уже не существует')
 
     except Exception as e:
-        await callback.message.answer(text=f'Что-то пошло не так при просмотре базы данных: {e}')
+        print(f'Что-то пошло не так при просмотре базы данных: {e}')
 
 
 @router.callback_query(F.data == 'save_my_event')
@@ -333,7 +341,8 @@ async def edit_my_event(callback: CallbackQuery):
 
 class Edit_event(StatesGroup):
     change_full_text = State()
-    change_datetime = State()
+    change_date = State()
+    change_time = State()
     change_frequency = State()
     add_recipient = State()
     delete_recipient = State()
@@ -370,33 +379,54 @@ async def change_full_text_last(message: Message, state: FSMContext):
 async def change_datetime_first(callback: CallbackQuery, state: FSMContext):
     try:
         await callback.answer()
-        await callback.message.answer(text='Введите новые дату и время в соответствии с форматом "01.01.0001 01:01"')
-        await state.set_state(Edit_event.change_datetime)
+        await callback.message.answer(text='Выберите новую дату', reply_markup=await aiogram_calendar.SimpleCalendar(locale=await get_user_locale(callback.from_user)).start_calendar())
+        await state.set_state(Edit_event.change_date)
 
     except Exception as e:
         callback.message.answer(f'Что-то пошло не так {e}')
 
-@router.message(Edit_event.change_datetime)
-async def change_datetime_last(message: Message, state: FSMContext):
+
+# @router.callback_query(SimpleCalendarCallback.filter())
+# async def process_simple_calendar(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+#     calendar = SimpleCalendar(
+#         locale=await get_user_locale(callback_query.from_user), show_alerts=True
+#     )
+#     calendar.set_dates_range(datetime(2024, 1, 1), datetime(2027, 12, 31))
+#     selected, date = await calendar.process_selection(callback_query, callback_data)
+#     if selected:
+#         await state.update_data(new_date_of_event=date)
+#         await callback_query.message.answer(
+#             f'Вы выбрали {date.strftime("%d.%m.%Y")}')
+#         await callback_query.message.answer('Введите время в формате 01:01')
+#         await state.set_state(Edit_event.change_time)
+
+
+@router.message(Edit_event.change_time)
+async def usual_creating_second_step(message: Message, state: FSMContext):
     try:
-        if not await func.validate_date_time(message.text):
-            await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
-            await state.set_state(Edit_event.change_datetime)
-            return
-        
-        await state.update_data(datetime=message.text)
         data = await state.get_data()
-        
-        if await db.change_datetime(data['datetime'], _id):
-            await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-            await state.clear()
+        date:datetime = data['date_of_event']
+        time = datetime.strptime(message.text, '%H:%M')
+
+        datetime_of_event = datetime(date.year, date.month, date.day, time.hour, time.minute).strftime('%d.%m.%Y %H:%M')
+        if not await func.validate_date_time(datetime_of_event):
+            await message.answer('Что-то пошло не так.\nВозможно вы вписали дату и время, которые уже прошли. Попробуйте еще раз')
+            await state.set_state(Edit_event.change_time)
             return
         
+        if await db.change_datetime(datetime_of_event, _id):
+                await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+                await state.clear()
+                return
+
         raise Exception('Ошибка при изменении даты и времени события')
 
     except Exception as e:
-        message.answer(f'Что-то пошло не так: {e}')
+        print(f'Ошибка: {e}')
 
+    finally:
+        await state.clear()
+        
 
 @router.callback_query(F.data == 'change_frequency')
 async def change_frequency_first(callback: CallbackQuery, state: FSMContext):
@@ -469,6 +499,7 @@ async def edit_recipients_at_event_second(callback: CallbackQuery, state: FSMCon
 
     finally:
         list_of_users.clear()
+        state.clear()
 
 
 @router.callback_query(F.data == 'delete_my_event')

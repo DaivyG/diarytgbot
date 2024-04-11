@@ -5,8 +5,9 @@ from config import TOKEN
 from app.handlers import router
 from app import database as db
 from datetime import datetime, timedelta
+from aiogram.client.bot import DefaultBotProperties
 
-bot = Bot(token=TOKEN)
+bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 
 #при нажатии далее если ни один пользователь не выбран бот работает дальше
@@ -67,8 +68,8 @@ async def hourly_task():
             difference_total_seconds = difference.total_seconds()
 
             if difference_total_seconds > 60 * 10:
-                print('Есть напоминания, уснул на 10 минут')
-                await asyncio.sleep(60 * 10)
+                print('Есть напоминания, уснул на 1 минут')
+                await asyncio.sleep(60)
                 continue
             
             else:

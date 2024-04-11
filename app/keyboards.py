@@ -95,7 +95,7 @@ edit_my_event_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Изменить дату и время события', callback_data='change_datetime')],
     [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')], 
     [InlineKeyboardButton(text='Изменить адресатов', callback_data='add_recipient')], 
-    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_my_event')] #
+    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_my_event')]
 ])
 
 
@@ -121,3 +121,18 @@ async def del_users_keyboard(users):
     keyboard.add(InlineKeyboardButton(text='Все пользователи', callback_data='del_user-all_users'))
     keyboard.add(InlineKeyboardButton(text='Далее', callback_data='del_user-next_step'))
     return keyboard.adjust(2).as_markup()
+
+
+'''
+Клавиатура для выбора напоминаний
+'''
+reminders_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='За час', callback_data='reminders_keyboard-1h')],
+    [InlineKeyboardButton(text='За три часа', callback_data='reminders_keyboard-3h')],
+    [InlineKeyboardButton(text='За день', callback_data='reminders_keyboard-1d')],
+    [InlineKeyboardButton(text='За 3 дня', callback_data='reminders_keyboard-3d')],
+    [InlineKeyboardButton(text='За неделю', callback_data='reminders_keyboard-7d')],
+    [InlineKeyboardButton(text='Произвольное количество часов', callback_data='reminders_keyboard-free_h')],
+    [InlineKeyboardButton(text='Произвольное количество дней', callback_data='reminders_keyboard-free_d')],
+    [InlineKeyboardButton(text='Далее', callback_data='reminders_keyboard-next_step')],
+])

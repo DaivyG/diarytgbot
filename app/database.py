@@ -2,6 +2,8 @@
 import sqlite3 as sq
 import app.functions as func
 
+from datetime import datetime
+
 async def db_start():
     '''
     Создание таблиц в базе данных
@@ -14,7 +16,7 @@ async def db_start():
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         full_text TEXT,
                         heading VARCHAR(30) GENERATED ALWAYS AS (SUBSTR(full_text, 0, 30)),
-                        date_of_creating DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        date_of_creating DATETIME,
                         author VARCHAR(20),
                         date_and_time DATETIME)''')
 
@@ -61,8 +63,8 @@ async def create_new_event(data:dict):
         _datetime = data.get('datetime')
         if _datetime is None:
             _datetime = func.next_day_foo()
-        cur.execute('''INSERT INTO events (full_text, author, date_and_time) VALUES (?, ?, ?)''',
-                    (data['text'], data['author'], _datetime))
+        cur.execute('''INSERT INTO events (full_text, date_of_creating, author, date_and_time) VALUES (?, ?, ?, ?)''',
+                    (data['text'], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), data['author'], _datetime))
 
         event_id = cur.lastrowid
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
