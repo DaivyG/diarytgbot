@@ -17,6 +17,7 @@ import app.keyboards as kb
 admins = ['Dayviyo', 'iozephK']
 router = Router()
 list_of_users = []
+list_of_reminders = []
 
 
 @router.message(CommandStart())
@@ -40,6 +41,7 @@ class New_event(StatesGroup):
     date_and_time = State()
     frequency = State()
     recipients = State()
+    reminders = State()
 
 
 @router.message(F.text == 'Быстрое создание напоминания')
@@ -55,10 +57,10 @@ async def usual_creating_first_step(message: Message):
 
 @router.callback_query(SimpleCalendarCallback.filter())
 async def process_simple_calendar(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
+    now = datetime.now()
     calendar = SimpleCalendar(
-        locale=await get_user_locale(callback_query.from_user), show_alerts=True
-    )
-    calendar.set_dates_range(datetime(2024, 1, 1), datetime(2027, 12, 31))
+        locale=await get_user_locale(callback_query.from_user), show_alerts=True)
+    calendar.set_dates_range(datetime(now.year, now.month, now.day), datetime(2027, 12, 31))
     selected, date = await calendar.process_selection(callback_query, callback_data)
     if selected:
         await state.update_data(date_of_event=date)
@@ -66,13 +68,11 @@ async def process_simple_calendar(callback_query: CallbackQuery, callback_data: 
             f'Вы выбрали {date.strftime("%d.%m.%Y")}')
         await callback_query.message.answer('Введите время в формате 01:01')
 
-        print(await state.get_state())
         if await state.get_state() is None:
             await state.set_state(New_event.date_and_time)
-
         else:
             await state.set_state(Edit_event.change_time)
-        
+
 
 @router.message(New_event.date_and_time)
 async def usual_creating_second_step(message: Message, state: FSMContext):
@@ -82,13 +82,75 @@ async def usual_creating_second_step(message: Message, state: FSMContext):
 
     datetime_of_event = datetime(date.year, date.month, date.day, time.hour, time.minute).strftime('%d.%m.%Y %H:%M')
     if not await func.validate_date_time(datetime_of_event):
-        await message.answer('Что-то пошло не так.\nВозможно вы ошиблись при вводе формата даты, либо вписали дату, которая уже прошла. Попробуйте еще раз\n"01.01.0001 01:01"')
+        await message.answer('Что-то пошло не так.\nВозможно вы ошиблись в формате времени, либо время, которое уже прошло. Попробуйте еще раз.\nВведите время в формате 01:01')
         await state.set_state(New_event.date_and_time)
         return
 
     await state.update_data(datetime=datetime_of_event)
-    await state.set_state(New_event.frequency)
-    await message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
+    await message.answer('Выберите напоминания', reply_markup=await kb.get_reminders_keyboard(await func.get_reminders(datetime_of_event)))
+
+
+@router.message(New_event.reminders)
+async def usual_creating_fourth_step(message: Message):
+    if message.text.isdigit():
+        last_thing = list_of_reminders.pop()
+
+        max_value = 24 if last_thing == 'h' else 30
+        error_message = f'Количество {"часов " if last_thing == "h" else "дней "}не должно превышать {max_value}. Введите цифру в пределах данного диапазона'
+
+        if int(message.text) < max_value:
+            list_of_reminders.append(message.text + last_thing)
+        else:
+            await message.answer(error_message)
+            list_of_reminders.append(last_thing)
+
+    else:
+        await message.answer('Вы должны ввести количество дней/часов только цифрой')
+
+
+@router.callback_query(F.data.split('-')[0] == 'reminders_keyboard')
+async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext):
+    try:
+        global list_of_reminders
+        await callback.answer()
+
+        if callback.data.split('-')[1] == 'all_reminders':
+            data = await state.get_data()
+            date = data['datetime']
+            for i in await func.get_reminders(date):
+                list_of_reminders.append(i)
+            return
+
+        elif callback.data.split('-')[1] != 'next_step':
+            if callback.data.split('-')[1].split('_')[0] == 'free':
+                time_unit = callback.data.split('-')[1].split('_')[1]
+                if time_unit == 'h':
+                    time_unit_text = 'часов'
+                else:
+                    time_unit_text = 'дней'
+                await callback.message.answer(f'Введите количество {time_unit_text}, за которое вам нужно сообщить о событии. Количество не должно превышать 24 часов для часов и 30 дней для дней.\nВвести нужно только цифру')
+                await state.set_state(New_event.reminders)
+                list_of_reminders.append(time_unit)
+                return
+            list_of_reminders.append(callback.data.split('-')[1])
+            return
+
+        formatted_reminders = []
+        for reminder in list_of_reminders:
+            if 'd' in reminder or 'h' in reminder:
+                formatted_reminders.append(func.format_time(reminder))
+            else:
+                formatted_reminders.append(reminder)
+        formatted_reminders = sorted(set(formatted_reminders), key=lambda x: int(x.split()[0]) if x.split()[1][0] == 'ч' else int(x.split()[0]) * 24)
+        formatted_reminders_text = ', '.join(formatted_reminders)
+        await callback.message.delete()
+        await callback.message.answer(f'Переходим к следующему шагу. Вы выбрали следующие напоминания: {formatted_reminders_text}')
+        await state.update_data(reminders=formatted_reminders)
+
+        await state.set_state(New_event.frequency)
+        await callback.message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
+    except Exception as e:
+        print(f'Ошибка при выборе напоминаний: {e}')
 
 
 @router.message(New_event.frequency)
@@ -106,29 +168,34 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.split('-')[0] == 'add_user')
 async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext):
-    global list_of_users
+    try:
+        global list_of_users
 
-    if callback.data.split('-')[1] == 'all_users':
+        action = callback.data.split('-')[1]
+
+        if action == 'all_users':
+            await callback.answer()
+            list_of_users.extend(i[2] for i in await db.look_at_db_users())
+
+        elif action != 'next_step':
+            await callback.answer()
+            list_of_users.append(action)
+
+        if not list_of_users:
+            await callback.answer()
+            await callback.message.edit_text('Вы не выбрали ни одного пользователя', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
+            return
+
+        list_of_users = list(set(map(str.capitalize, list_of_users)))
         await callback.answer()
-        for i in await db.look_at_db_users():
-            list_of_users.append(i[2])
+        await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующих пользователей: {", ".join(list_of_users)}')
+        await state.update_data(recipients=list_of_users)
+        await callback.message.answer('Введите описание события')
+        await state.set_state(New_event.text_of_event)
 
-    elif callback.data.split('-')[1] != 'next_step':
-        await callback.answer()
-        list_of_users.append(callback.data.split('-')[1])
-        return
+    except Exception as e:
+        print(f'Произошла ошибка при выборе получателей: {e}')
 
-    if not list_of_users:
-        await callback.answer()
-        await callback.message.edit_text('Вы не выбрали ни одного пользователя', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
-        return
-
-    list_of_users = list(set(map(lambda x: x.capitalize(), list_of_users)))
-    await callback.answer()
-    await callback.message.edit_text(f'Переходим к следующему шагу. Вы выбрали следующих пользователей: {", ".join(list_of_users)}', reply_markup=None)
-    await callback.message.answer('Введите описание события')
-    await state.set_state(New_event.text_of_event)
-    await state.update_data(recipients=list_of_users)
 
 
 @router.message(New_event.text_of_event)
@@ -162,11 +229,11 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
             raise Exception
     
         await message.answer(f'''Событие успешно создано со следующими параметрами:
-        Username создателя события: <b>@{author}</b>,
-        Описание события: <b>{text}</b>,
-        Дата и время: <b>{datetime}</b>,
-        Цикличность повторения: <b>{frequency}</b>,
-        Получатели: <b>{recipients}</b>''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+        <b>Username создателя события</b>: @{author},
+        <b>Описание события</b>: {text},
+        <b>Дата и время</b>: {datetime},
+        <b>Цикличность повторения</b>: {frequency},
+        <b>Получатели</b>: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
     except Exception as e:
         print(f'Ошибка при создании события: {e}')
@@ -175,7 +242,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
     finally:
         await state.clear()
         list_of_users.clear()
-
+        list_of_reminders.clear()
 
 @router.message(F.text == 'Админ панель')
 async def adm_starting(message: Message):
@@ -389,23 +456,8 @@ async def change_datetime_first(callback: CallbackQuery, state: FSMContext):
         callback.message.answer(f'Что-то пошло не так {e}')
 
 
-# @router.callback_query(SimpleCalendarCallback.filter())
-# async def process_simple_calendar(callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext):
-#     calendar = SimpleCalendar(
-#         locale=await get_user_locale(callback_query.from_user), show_alerts=True
-#     )
-#     calendar.set_dates_range(datetime(2024, 1, 1), datetime(2027, 12, 31))
-#     selected, date = await calendar.process_selection(callback_query, callback_data)
-#     if selected:
-#         await state.update_data(new_date_of_event=date)
-#         await callback_query.message.answer(
-#             f'Вы выбрали {date.strftime("%d.%m.%Y")}')
-#         await callback_query.message.answer('Введите время в формате 01:01')
-#         await state.set_state(Edit_event.change_time)
-
-
 @router.message(Edit_event.change_time)
-async def usual_creating_second_step(message: Message, state: FSMContext):
+async def change_datetime_second(message: Message, state: FSMContext):
     try:
         data = await state.get_data()
         date:datetime = data['date_of_event']
@@ -413,7 +465,7 @@ async def usual_creating_second_step(message: Message, state: FSMContext):
 
         datetime_of_event = datetime(date.year, date.month, date.day, time.hour, time.minute).strftime('%d.%m.%Y %H:%M')
         if not await func.validate_date_time(datetime_of_event):
-            await message.answer('Что-то пошло не так.\nВозможно вы вписали дату и время, которые уже прошли. Попробуйте еще раз')
+            await message.answer('Что-то пошло не так.\nВозможно вы ошиблись в формате времени, либо время, которое уже прошло. Попробуйте еще раз.\nВведите время в формате 01:01')
             await state.set_state(Edit_event.change_time)
             return
         

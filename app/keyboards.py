@@ -122,16 +122,21 @@ async def del_users_keyboard(users):
     return keyboard.adjust(2).as_markup()
 
 
-'''
-Клавиатура для выбора напоминаний
-'''
-reminders_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='За час', callback_data='reminders_keyboard-1h')],
-    [InlineKeyboardButton(text='За три часа', callback_data='reminders_keyboard-3h')],
-    [InlineKeyboardButton(text='За день', callback_data='reminders_keyboard-1d')],
-    [InlineKeyboardButton(text='За 3 дня', callback_data='reminders_keyboard-3d')],
-    [InlineKeyboardButton(text='За неделю', callback_data='reminders_keyboard-7d')],
-    [InlineKeyboardButton(text='Произвольное количество часов', callback_data='reminders_keyboard-free_h')],
-    [InlineKeyboardButton(text='Произвольное количество дней', callback_data='reminders_keyboard-free_d')],
-    [InlineKeyboardButton(text='Далее', callback_data='reminders_keyboard-next_step')],
-])
+async def get_reminders_keyboard(reminders):
+    '''
+    Клавиатура для выбора напоминаний
+    '''
+    keyboard = InlineKeyboardBuilder()
+
+    # Добавляем кнопки для каждого напоминания
+    for reminder in reminders:
+        keyboard.add(InlineKeyboardButton(text=reminder, callback_data=f'reminders_keyboard-{reminder}'))
+
+    # Добавляем кнопки "Произвольное количество часов" и "Произвольное количество дней" по отдельности
+    keyboard.row(InlineKeyboardButton(text='Произвольное количество часов', callback_data='reminders_keyboard-free_h'))
+    keyboard.row(InlineKeyboardButton(text='Произвольное количество дней', callback_data='reminders_keyboard-free_d'))
+
+    # Добавляем кнопки "Все напоминания" и "Далее" в один ряд
+    keyboard.row(InlineKeyboardButton(text='Все напоминания', callback_data='reminders_keyboard-all_reminders'), InlineKeyboardButton(text='Далее', callback_data='reminders_keyboard-next_step'))
+
+    return keyboard.as_markup()

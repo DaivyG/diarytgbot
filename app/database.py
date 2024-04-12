@@ -68,7 +68,7 @@ async def create_new_event(data:dict):
 
         event_id = cur.lastrowid
         # Вставляем данные в таблицу dates_of_reminders в зависимости от того, что хранится в переменной
-        for k, v in func.date_to_format(data.get('datetime')).items():
+        for k, v in func.date_to_format(_datetime, data.get('reminders')).items():
             cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
                         VALUES (?, ?, ?, ?)''', (k, v, data['frequency'], event_id))
 
