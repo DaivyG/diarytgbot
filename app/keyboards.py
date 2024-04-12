@@ -73,7 +73,7 @@ async def look_at_my_events(events):
         return keyboard.as_markup()
 
     for event in events:
-        keyboard.add(InlineKeyboardButton(text=str(event[0]), callback_data=f'look_at_my_event-{event[0]}'))
+        keyboard.add(InlineKeyboardButton(text=str(event[0]), callback_data=f'look_at_my_event-{event[1]}'))
 
     return keyboard.adjust(2).as_markup()
 
@@ -82,9 +82,8 @@ async def look_at_my_events(events):
 Клавиатура показывающая возможные действия под выбранным событием
 '''
 my_events_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Изменить информацию в событии', callback_data='edit_my_event')],
-    [InlineKeyboardButton(text='Сохранить событие', callback_data='save_my_event')],
-    [InlineKeyboardButton(text='Удалить событие', callback_data='delete_my_event')]
+    [InlineKeyboardButton(text='Изменить', callback_data='edit_my_event'),
+    InlineKeyboardButton(text='Удалить', callback_data='delete_my_event')]
 ])
 
 '''

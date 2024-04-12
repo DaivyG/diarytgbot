@@ -348,6 +348,7 @@ class Edit_event(StatesGroup):
     delete_recipient = State()
     delete_reminder = State()
 
+
 @router.callback_query(F.data == 'change_full_text')
 async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
     try:
@@ -358,6 +359,7 @@ async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
     except Exception as e:
         print(f'Что-то пошло не так {e}')
         await callback.message.answer(f'Что-то пошло не так: {e}')
+
 
 @router.message(Edit_event.change_full_text)
 async def change_full_text_last(message: Message, state: FSMContext):
@@ -374,6 +376,7 @@ async def change_full_text_last(message: Message, state: FSMContext):
     
     finally:
         await state.clear()
+
 
 @router.callback_query(F.data == 'change_datetime')
 async def change_datetime_first(callback: CallbackQuery, state: FSMContext):

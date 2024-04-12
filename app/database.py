@@ -173,7 +173,7 @@ async def look_at_db_events(name):
 
         if user_name:
             # Если пользователь найден, выполняем запрос к таблице events
-            cur.execute('''SELECT heading 
+            cur.execute('''SELECT heading, id
                             FROM events e
                             JOIN recipients r ON e.id = r.event_id
                             WHERE r.recipient_name=?''', (user_name[0],))
@@ -212,7 +212,7 @@ async def username_to_name(username):
         conn.close()
 
     
-async def look_at_cur_event(event_name):
+async def look_at_cur_event(id):
     '''
     Просмотр информации о конкретном событии
     '''
@@ -222,7 +222,7 @@ async def look_at_cur_event(event_name):
     try:
         cur.execute('''SELECT *
                     FROM events 
-                    WHERE heading=?''', (event_name,))
+                    WHERE id=?''', (id,))
 
         data = cur.fetchall()
         if data:

@@ -10,8 +10,6 @@ from aiogram.client.bot import DefaultBotProperties
 bot = Bot(TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 
-#при нажатии далее если ни один пользователь не выбран бот работает дальше
-
 async def on_startup():
     '''
     Функция для создания базы данных в случае ее отсутствия
@@ -26,7 +24,7 @@ async def send_message(chat_ids, heading, period, datetime_of_event:datetime, fr
     try:
         for chat_id in chat_ids:
             await bot.send_message(chat_id, [f'До события {heading} осталось {period}', f'Событие {heading} только что наступило'][period == 'Сейчас'])
-        
+
         if period == 'Сейчас':
             if frequency == 'Единично':
                 await db.delete_my_event(_id)
@@ -43,10 +41,11 @@ async def send_message(chat_ids, heading, period, datetime_of_event:datetime, fr
             elif frequency == 'Ежегодно':
                 await db.change_datetime(str(datetime_of_event.replace(year=datetime_of_event.year + 1).strftime('%d.%m.%Y %H:%M')), _id)
                 await bot.send_message(chat_id, 'Событие перенесено на следующий год')
+
+        else:
+            await db.delete_my_event(_id)
+
         return True
-            
-        # await db.delete_my_event(_id)
-        # return True
 
     except Exception as e:
         print(f'Что-то пошло не так: {e}')
@@ -67,7 +66,7 @@ async def hourly_task():
             difference:timedelta = nearest[1] - datetime.now()
             difference_total_seconds = difference.total_seconds()
 
-            if difference_total_seconds > 60 * 10:
+            if difference_total_seconds > 60:
                 print('Есть напоминания, уснул на 1 минут')
                 await asyncio.sleep(60)
                 continue
