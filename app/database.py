@@ -513,3 +513,30 @@ async def change_date_of_reminder(new_datetime, id_):
     finally:
         cur.close()
         conn.close()
+
+
+async def change_reminders(_datetime, list_of_reminders, frequency, _id):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        if list_of_reminders is False:
+            return None
+        
+        cur.execute('''DELETE FROM dates_of_reminders
+                    WHERE event_id = ?''', (_id,))
+
+        for k, v in func.date_to_format(_datetime, list_of_reminders).items():
+            cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
+                        VALUES (?, ?, ?, ?)''', (k, v, frequency, _id))
+            
+        conn.commit()
+        return True
+
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()

@@ -87,70 +87,8 @@ async def usual_creating_second_step(message: Message, state: FSMContext):
         return
 
     await state.update_data(datetime=datetime_of_event)
-    await message.answer('Выберите напоминания', reply_markup=await kb.get_reminders_keyboard(await func.get_reminders(datetime_of_event)))
-
-
-@router.message(New_event.reminders)
-async def usual_creating_fourth_step(message: Message):
-    if message.text.isdigit():
-        last_thing = list_of_reminders.pop()
-
-        max_value = 24 if last_thing == 'h' else 30
-        error_message = f'Количество {"часов " if last_thing == "h" else "дней "}не должно превышать {max_value}. Введите цифру в пределах данного диапазона'
-
-        if int(message.text) < max_value:
-            list_of_reminders.append(message.text + last_thing)
-        else:
-            await message.answer(error_message)
-            list_of_reminders.append(last_thing)
-
-    else:
-        await message.answer('Вы должны ввести количество дней/часов только цифрой')
-
-
-@router.callback_query(F.data.split('-')[0] == 'reminders_keyboard')
-async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext):
-    try:
-        global list_of_reminders
-        await callback.answer()
-
-        if callback.data.split('-')[1] == 'all_reminders':
-            data = await state.get_data()
-            date = data['datetime']
-            for i in await func.get_reminders(date):
-                list_of_reminders.append(i)
-            return
-
-        elif callback.data.split('-')[1] != 'next_step':
-            if callback.data.split('-')[1].split('_')[0] == 'free':
-                time_unit = callback.data.split('-')[1].split('_')[1]
-                if time_unit == 'h':
-                    time_unit_text = 'часов'
-                else:
-                    time_unit_text = 'дней'
-                await callback.message.answer(f'Введите количество {time_unit_text}, за которое вам нужно сообщить о событии. Количество не должно превышать 24 часов для часов и 30 дней для дней.\nВвести нужно только цифру')
-                await state.set_state(New_event.reminders)
-                list_of_reminders.append(time_unit)
-                return
-            list_of_reminders.append(callback.data.split('-')[1])
-            return
-
-        formatted_reminders = []
-        for reminder in list_of_reminders:
-            if 'd' in reminder or 'h' in reminder:
-                formatted_reminders.append(func.format_time(reminder))
-            else:
-                formatted_reminders.append(reminder)
-        formatted_reminders = sorted(set(formatted_reminders), key=lambda x: int(x.split()[0]) if x.split()[1][0] == 'ч' else int(x.split()[0]) * 24)
-        formatted_reminders_text = ', '.join(formatted_reminders)
-        await callback.message.delete()
-        await callback.message.answer(f'Переходим к следующему шагу. Вы выбрали следующие напоминания: {formatted_reminders_text}')
-        await state.update_data(reminders=formatted_reminders)
-
-        await state.set_state(New_event.frequency)
-        await callback.message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
-    except Exception as e:
-        print(f'Ошибка при выборе напоминаний: {e}')
+    await state.set_state(New_event.frequency)
+    await message.answer('Выберите цикличность события', reply_markup=kb.frequency_of_event_keyboard)
 
 
 @router.message(New_event.frequency)
@@ -412,7 +350,7 @@ class Edit_event(StatesGroup):
     change_frequency = State()
     add_recipient = State()
     delete_recipient = State()
-    delete_reminder = State()
+    change_reminders = State()
 
 
 @router.callback_query(F.data == 'change_full_text')
@@ -572,3 +510,94 @@ async def delete_reminder(callback: CallbackQuery):
             
     except Exception as e:
         await callback.message.answer(f'Произошла ошибка: {e}')
+
+
+@router.callback_query(F.data == 'change_reminders')
+async def change_reminders(callback: CallbackQuery, state: FSMContext):
+    '''
+    Изменение напоминаний о событии
+    '''
+    global _id
+    try:
+        await callback.answer()
+        data, *_, frequency = await db.look_at_cur_event(_id)
+        datetime_of_event = data[0][-1]
+
+        await state.update_data(frequency=frequency, datetime_of_event=datetime_of_event)
+        await callback.message.answer('Выберите нужные вам напоминания', reply_markup=await kb.get_reminders_keyboard(await func.get_reminders(datetime_of_event)))
+
+    except Exception as e:
+        print(f'Что-то пошло не так при изменении напоминаний о событии: {e}')
+
+
+@router.message(Edit_event.change_reminders)
+async def usual_creating_fourth_step(message: Message):
+    if message.text.isdigit():
+        last_thing = list_of_reminders.pop()
+
+        max_value = 24 if last_thing == 'h' else 30
+        error_message = f'Количество {"часов " if last_thing == "h" else "дней "}не должно превышать {max_value}. Введите цифру в пределах данного диапазона'
+
+        if int(message.text) < max_value:
+            list_of_reminders.append(message.text + last_thing)
+        else:
+            await message.answer(error_message)
+            list_of_reminders.append(last_thing)
+
+    else:
+        await message.answer('Вы должны ввести количество дней/часов только цифрой')
+
+
+@router.callback_query(F.data.split('-')[0] == 'reminders_keyboard')
+async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext):
+    try:
+        global list_of_reminders
+        await callback.answer()
+
+        if callback.data.split('-')[1] == 'all_reminders':
+            data = await state.get_data()
+            date = data['datetime_of_event']
+            for i in await func.get_reminders(date):
+                list_of_reminders.append(i)
+            return
+
+        elif callback.data.split('-')[1] != 'next_step':
+            if callback.data.split('-')[1].split('_')[0] == 'free':
+                time_unit = callback.data.split('-')[1].split('_')[1]
+                if time_unit == 'h':
+                    time_unit_text = 'часов'
+                else:
+                    time_unit_text = 'дней'
+                await callback.message.answer(f'Введите количество {time_unit_text}, за которое вам нужно сообщить о событии. Количество не должно превышать 24 часов для часов и 30 дней для дней.\nВвести нужно только цифру')
+                await state.set_state(Edit_event.change_reminders)
+                list_of_reminders.append(time_unit)
+                return
+            
+            list_of_reminders.append(callback.data.split('-')[1])
+            return
+
+        formatted_reminders = []
+        for reminder in list_of_reminders:
+            if 'd' in reminder or 'h' in reminder:
+                formatted_reminders.append(func.format_time(reminder))
+            else:
+                formatted_reminders.append(reminder)
+        formatted_reminders = sorted(set(formatted_reminders), key=lambda x: int(x.split()[0]) if x.split()[1][0] == 'ч' else int(x.split()[0]) * 24)
+        formatted_reminders_text = ', '.join(formatted_reminders)
+
+        data = await state.get_data()
+        datetime_of_event = data['datetime_of_event']
+        frequency = data['frequency']
+
+        if await db.change_reminders(datetime_of_event, formatted_reminders, frequency, _id):
+            await callback.message.answer(f'Все прошло успешно. Вы выбрали следующие напоминания: {formatted_reminders_text}')
+
+            await state.clear()
+            list_of_reminders.clear()
+        else:
+            raise Exception
+    
+        await callback.message.delete()
+
+    except Exception as e:
+        print(f'Ошибка при выборе напоминаний: {e}')
