@@ -140,7 +140,6 @@ async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext
         print(f'Произошла ошибка при выборе получателей: {e}')
 
 
-
 @router.message(New_event.text_of_event)
 async def usual_creating_last_step(message: Message, state: FSMContext):
     '''
@@ -170,7 +169,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
 
         if not await db.create_new_event(data):
             raise Exception
-    
+
         await message.answer(f'''Событие успешно создано со следующими параметрами:
         <b>Username создателя события</b>: @{author},
         <b>Описание события</b>: {text},
@@ -185,7 +184,6 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
     finally:
         await state.clear()
         list_of_users.clear()
-        list_of_reminders.clear()
 
 @router.message(F.text == 'Админ панель')
 async def adm_starting(message: Message):

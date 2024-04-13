@@ -288,23 +288,31 @@ async def change_datetime(datetime, id_):
                     SET date_and_time = ?
                     WHERE id = ?''', (datetime, id_))
        
-        cur.execute('''SELECT frequency
+        cur.execute('''SELECT period, frequency
                     FROM dates_of_reminders
                     WHERE event_id = ?''', (id_,))
        
-        frequency = cur.fetchall()[0][0]
+        data = cur.fetchall()
+        if data:
+            frequency = data[0][1]
+            list_of_reminders = [i[0] for i in data]
+            list_of_reminders.remove('Сейчас')
+            print(list_of_reminders)
 
-        cur.execute('''DELETE FROM dates_of_reminders
-                    WHERE event_id = ?''', (id_,))
-       
-        list_of_dates_reminders = func.date_to_format(datetime).items()
-    
-        for k, v in list_of_dates_reminders:
-            cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
-                        VALUES (?, ?, ?, ?)''', (k, v, frequency, id_))
+            cur.execute('''DELETE FROM dates_of_reminders
+                        WHERE event_id = ?''', (id_,))
+        
+            list_of_dates_reminders = func.date_to_format(datetime, list_of_reminders).items()
+        
+            for k, v in list_of_dates_reminders:
+                cur.execute('''INSERT INTO dates_of_reminders (period, event_datetime, frequency, event_id)
+                            VALUES (?, ?, ?, ?)''', (k, v, frequency, id_))
 
-        conn.commit()
-        return True
+            conn.commit()
+            return True
+        
+        else:
+            return False
     except Exception as e:
         print(f'Ошибка {e}')
         return False
