@@ -15,35 +15,48 @@ async def on_startup():
     Функция для создания базы данных в случае ее отсутствия
     '''
     try:
-        await db.db_start()     
+        await db.db_start()
     except Exception as e:
         print(f'Ошибка при создании БД: {e}')
 
 
-async def send_message(chat_ids, heading, period, datetime_of_event:datetime, frequency, _id):
+async def send_message(chat_ids, heading, period, datetime_of_event:datetime, frequency, event_id, _id):
     try:
         for chat_id in chat_ids:
             await bot.send_message(chat_id, [f'До события {heading} осталось {period}', f'Событие {heading} только что наступило'][period == 'Сейчас'])
 
         if period == 'Сейчас':
             if frequency == 'Единично':
-                await db.delete_my_event(_id)
+                await db.delete_my_event(event_id)
                 await bot.send_message(chat_id, 'Единичное событие удалено')
             elif frequency == 'Ежедневно':
-                await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 1).strftime('%d.%m.%Y %H:%M')), _id)
+                await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 1).strftime('%d.%m.%Y %H:%M')), event_id)
                 await bot.send_message(chat_id, 'Событие перенесено на следующий день')
             elif frequency == 'Еженедельно':
-                await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 7).strftime('%d.%m.%Y %H:%M')), _id)
+                await db.change_datetime(str(datetime_of_event.replace(day=datetime_of_event.day + 7).strftime('%d.%m.%Y %H:%M')), event_id)
                 await bot.send_message(chat_id, 'Событие перенесно на следующую неделю')
             elif frequency == 'Ежемесячно':
-                await db.change_datetime(str(datetime_of_event.replace(month=datetime_of_event.month + 1).strftime('%d.%m.%Y %H:%M')), _id)
+                await db.change_datetime(str(datetime_of_event.replace(month=datetime_of_event.month + 1).strftime('%d.%m.%Y %H:%M')), event_id)
                 await bot.send_message(chat_id, 'Событие перенесено на следующий месяц')
             elif frequency == 'Ежегодно':
-                await db.change_datetime(str(datetime_of_event.replace(year=datetime_of_event.year + 1).strftime('%d.%m.%Y %H:%M')), _id)
+                await db.change_datetime(str(datetime_of_event.replace(year=datetime_of_event.year + 1).strftime('%d.%m.%Y %H:%M')), event_id)
                 await bot.send_message(chat_id, 'Событие перенесено на следующий год')
 
         else:
-            await db.delete_my_event(_id)
+            if frequency == 'Единично':
+                await db.del_date_of_reminder(_id)
+            elif frequency == 'Ежедневно':
+                await db.change_date_of_reminder(str(datetime_of_event.replace(day=datetime_of_event.day + 1)), _id)
+                print('Напоминание перенесено на следующий день')
+            elif frequency == 'Еженедельно':
+                await db.change_date_of_reminder(str(datetime_of_event.replace(day=datetime_of_event.day + 7)), _id)
+                print('Напоминание перенесно на следующую неделю')
+            elif frequency == 'Ежемесячно':
+                await db.change_date_of_reminder(str(datetime_of_event.replace(month=datetime_of_event.month + 1)), _id)
+                print('Напоминание перенесено на следующий месяц')
+            elif frequency == 'Ежегодно':
+                await db.change_date_of_reminder(str(datetime_of_event.replace(year=datetime_of_event.year + 1)), _id)
+                print('Напоминание перенесено на следующий год')
 
         return True
 
@@ -61,8 +74,8 @@ async def hourly_task():
                 await asyncio.sleep(60 * 30)
                 continue
         
-            nearest = min(map(lambda x: (x[0], datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'), x[2], x[3]), data), key=lambda x: x[1])
-
+            nearest = min(map(lambda x: (x[0], datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'), x[2], x[3], x[4]), data), key=lambda x: x[1])
+            print(nearest)
             difference:timedelta = nearest[1] - datetime.now()
             difference_total_seconds = difference.total_seconds()
 
@@ -72,7 +85,7 @@ async def hourly_task():
                 continue
             
             else:
-                chat_ids, heading = await db.send_notification(nearest[-1])
+                chat_ids, heading = await db.send_notification(nearest[-2])
                 
                 if await send_message(chat_ids, heading, *nearest):
                     print('Все прошло успешно')

@@ -158,12 +158,16 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
     '''
     Сохранение цикличности
     '''
-    if not message.text in ['Единично', 'Ежедневно', 'Еженедельно', 'Ежемесячно', 'Ежегодно']:
-        await message.answer('Что-то пошло не так. Выберите один из предложенных вариантов:', reply_markup=kb.frequency_of_event_keyboard)
-        return
+    try:
+        if not message.text in ['Единично', 'Ежедневно', 'Еженедельно', 'Ежемесячно', 'Ежегодно']:
+            await message.answer('Что-то пошло не так. Выберите один из предложенных вариантов:', reply_markup=kb.frequency_of_event_keyboard)
+            return
 
-    await state.update_data(frequency=message.text)
-    await message.answer('Выберите получателей события', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
+        await state.update_data(frequency=message.text)
+        await message.answer('Выберите получателей события', reply_markup=await kb.add_users_keyboard(await db.look_at_db_users()))
+    
+    except Exception as e:
+        message.answer(f'Произошла ошибка: {e}')
 
 
 @router.callback_query(F.data.split('-')[0] == 'add_user')
@@ -180,6 +184,7 @@ async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext
         elif action != 'next_step':
             await callback.answer()
             list_of_users.append(action)
+            return
 
         if not list_of_users:
             await callback.answer()
@@ -346,7 +351,7 @@ async def del_user(callback: CallbackQuery):
         raise Exception('Ошибка во время удаления пользователя')
 
     except Exception as e:
-        await callback.message.answer(f'Что-то пошло не так: {e}')
+        await callback.message.answer(f'Что-то пошло не так при удалении пользователя: {e}')
 
     finally:
         list_of_users.clear()
@@ -379,12 +384,12 @@ async def select_one_of_events(callback: CallbackQuery):
 
         await callback.message.answer(text=f'''{small_text}
                                       
-Полный текст: <b>{full_text}</b>,
-Создано: <b>{datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y %H:%M')}</b>,
-Напоминание: <b>{datetime_of_event}</b>,
-Цикличность события: <b>{frequency}</b>,
-Автор события: <b>@{author_username}</b>,
-Получатели события: <b>{recipients}</b>''', reply_markup=kb.my_events_inline_keyboard)
+<b>Полный текст</b>: {full_text},
+<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Напоминание</b>: {datetime_of_event},
+<b>Цикличность события</b>: {frequency},
+<b>Автор события</b>: @{author_username},
+<b>Получатели события</b>: {recipients}''', reply_markup=kb.my_events_inline_keyboard)
 
 
     except TypeError:
@@ -392,12 +397,6 @@ async def select_one_of_events(callback: CallbackQuery):
 
     except Exception as e:
         print(f'Что-то пошло не так при просмотре базы данных: {e}')
-
-
-@router.callback_query(F.data == 'save_my_event')
-async def save_my_event(callback: CallbackQuery):
-    await callback.answer()
-    await callback.message.edit_text('Сохранение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins]) # ????????????????????????????????
 
 
 @router.callback_query(F.data == 'edit_my_event')
@@ -424,13 +423,14 @@ async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
         await state.set_state(Edit_event.change_full_text)
 
     except Exception as e:
-        print(f'Что-то пошло не так {e}')
-        await callback.message.answer(f'Что-то пошло не так: {e}')
+        print(f'Что-то пошло не так при изменении текста {e}')
+        await callback.message.answer(f'Что-то пошло не так при изменении текста: {e}')
 
 
 @router.message(Edit_event.change_full_text)
 async def change_full_text_last(message: Message, state: FSMContext):
     try:
+        global _id
         await state.update_data(text=message.text)
         data = await state.get_data()
         
@@ -439,7 +439,7 @@ async def change_full_text_last(message: Message, state: FSMContext):
         await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
     
     except Exception as e:
-        await message.answer(f'Что-то пошло не так: {e}')
+        await message.answer(f'Что-то пошло не так при изменении текста 2: {e}')
     
     finally:
         await state.clear()
@@ -453,7 +453,7 @@ async def change_datetime_first(callback: CallbackQuery, state: FSMContext):
         await state.set_state(Edit_event.change_date)
 
     except Exception as e:
-        callback.message.answer(f'Что-то пошло не так {e}')
+        callback.message.answer(f'Что-то пошло не так при изменении даты и времени {e}')
 
 
 @router.message(Edit_event.change_time)
@@ -471,7 +471,6 @@ async def change_datetime_second(message: Message, state: FSMContext):
         
         if await db.change_datetime(datetime_of_event, _id):
                 await message.answer('Изменение прошло успешно!', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
-                await state.clear()
                 return
 
         raise Exception('Ошибка при изменении даты и времени события')
@@ -497,6 +496,10 @@ async def change_frequency_first(callback: CallbackQuery, state: FSMContext):
 @router.message(Edit_event.change_frequency)
 async def change_frequency_last(message: Message, state: FSMContext):
     try:
+        if not message.text in ['Единично', 'Ежедневно', 'Еженедельно', 'Ежемесячно', 'Ежегодно']:
+            await message.answer('Что-то пошло не так. Выберите один из предложенных вариантов:', reply_markup=kb.frequency_of_event_keyboard)
+            return
+
         data = await state.update_data(frequency=message.text)
 
         if await db.change_frequency(data['frequency'], _id):
@@ -554,7 +557,7 @@ async def edit_recipients_at_event_second(callback: CallbackQuery, state: FSMCon
 
     finally:
         list_of_users.clear()
-        state.clear()
+        await state.clear()
 
 
 @router.callback_query(F.data == 'delete_my_event')

@@ -32,6 +32,7 @@ async def db_start():
                         event_datetime DATETIME,
                         frequency VARCHAR(20),
                         event_id INT NOT NULL,
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
 
                         CONSTRAINT event_id_fk FOREIGN KEY (event_id) REFERENCES events (id))''')
         
@@ -459,6 +460,48 @@ async def add_chat_id_at_db_users(username, chat_id):
         cur.execute('''UPDATE users
                     SET chat_id = ?
                     WHERE username = ?''', (chat_id, username))
+        
+        conn.commit()
+        return True
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def del_date_of_reminder(id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        cur.execute('''DELETE FROM dates_of_reminders
+                    WHERE id = ?''', (id_,))
+        
+        conn.commit()
+        return True
+    
+    except Exception as e:
+        print(f'Ошибка {e}')
+        return False
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+async def change_date_of_reminder(new_datetime, id_):
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+
+    try:
+        print(new_datetime)
+        cur.execute('''UPDATE dates_of_reminders
+                    SET event_datetime = ?
+                    WHERE id = ?''', (new_datetime, id_))
         
         conn.commit()
         return True
