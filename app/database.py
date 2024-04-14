@@ -124,7 +124,7 @@ async def add_at_db_users(data):
 
     try:
         cur.execute('''INSERT INTO users (username, name, chat_id)
-                    VALUES (?, ?, ?)''', (data['username'], data['name'], data.get('chat_id', 'Еще не регистрировался')))
+                    VALUES (?, ?, ?)''', (data['username'], data['name'], data.get('chat_id', f'{data["username"]}: Еще не регистрировался')))
 
         conn.commit()
         return True

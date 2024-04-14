@@ -1,4 +1,5 @@
 import asyncio
+import aiogram.exceptions
 
 from aiogram import Bot, Dispatcher
 from config import TOKEN
@@ -59,6 +60,10 @@ async def send_message(chat_ids, heading, period, datetime_of_event:datetime, fr
                 print('Напоминание перенесено на следующий год')
 
         return True
+
+    except aiogram.exceptions.TelegramNotFound:
+        print(f'Аккаунт {chat_id}')
+        asyncio.sleep(60)
 
     except Exception as e:
         print(f'Что-то пошло не так: {e}')

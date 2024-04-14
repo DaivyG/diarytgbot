@@ -28,7 +28,7 @@ async def start(message: Message):
     if not data is None:
         dict_of_status = {i[1][1:]:i[-1] for i in data}
         username = message.from_user.username
-        if username in dict_of_status.keys() and dict_of_status[username] == 'Еще не регистрировался':
+        if username in dict_of_status.keys() and dict_of_status[username].split(': ')[1] == 'Еще не регистрировался':
             await db.add_chat_id_at_db_users(f'@{username}', message.chat.id)
             print('Успешно добавлен чат id')
 
@@ -372,7 +372,6 @@ async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
 @router.message(Edit_event.change_full_text)
 async def change_full_text_last(message: Message, state: FSMContext):
     try:
-        global _id
         await state.update_data(text=message.text)
         data = await state.get_data()
         
