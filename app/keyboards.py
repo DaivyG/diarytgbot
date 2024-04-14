@@ -141,3 +141,13 @@ async def get_reminders_keyboard(reminders):
     keyboard.row(InlineKeyboardButton(text='Все напоминания', callback_data='reminders_keyboard-all_reminders'), InlineKeyboardButton(text='Далее', callback_data='reminders_keyboard-next_step'))
 
     return keyboard.as_markup()
+
+
+'''
+Клавиатура после создания нового события
+'''
+my_events_inline_keyboard_2 = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Изменить', callback_data='edit_my_event'),
+    InlineKeyboardButton(text='Удалить', callback_data='delete_my_event')],
+    [InlineKeyboardButton(text='Напомнить заранее', callback_data='change_reminders')]
+])

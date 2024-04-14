@@ -75,7 +75,6 @@ async def hourly_task():
                 continue
         
             nearest = min(map(lambda x: (x[0], datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'), x[2], x[3], x[4]), data), key=lambda x: x[1])
-            print(nearest)
             difference:timedelta = nearest[1] - datetime.now()
             difference_total_seconds = difference.total_seconds()
 

@@ -146,6 +146,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
     Сохранение описания события, чата id и username автора
     '''
     global list_of_users
+    global _id
     await state.update_data(text=message.text, author=message.from_user.username)
     data = await state.get_data()
 
@@ -167,15 +168,18 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         if datetime is None:
             datetime = func.next_day_foo()
 
-        if not await db.create_new_event(data):
-            raise Exception
+        _id = await db.create_new_event(data)
 
+        if not _id:
+            raise Exception
+        
         await message.answer(f'''Событие успешно создано со следующими параметрами:
         <b>Username создателя события</b>: @{author},
         <b>Описание события</b>: {text},
         <b>Дата и время</b>: {datetime},
         <b>Цикличность повторения</b>: {frequency},
-        <b>Получатели</b>: {recipients}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
+        <b>Получатели</b>: {recipients}''', reply_markup=kb.my_events_inline_keyboard_2)
+
 
     except Exception as e:
         print(f'Ошибка при создании события: {e}')
@@ -301,6 +305,9 @@ async def admin_panel(message: Message):
 
 @router.callback_query(F.data.split('-')[0] == 'look_at_my_event')
 async def select_one_of_events(callback: CallbackQuery):
+    '''
+    Функция для просмотра конкретного события
+    '''
     global _id
     try:
         await callback.answer()
@@ -326,7 +333,6 @@ async def select_one_of_events(callback: CallbackQuery):
 <b>Цикличность события</b>: {frequency},
 <b>Автор события</b>: @{author_username},
 <b>Получатели события</b>: {recipients}''', reply_markup=kb.my_events_inline_keyboard)
-
 
     except TypeError:
         await callback.message.answer(text='Данное событие уже не существует')
@@ -504,6 +510,7 @@ async def delete_reminder(callback: CallbackQuery):
     try:
         await callback.answer()
         if await db.delete_my_event(_id):
+            await callback.message.delete()
             await callback.message.answer('Удаление успешно выполнено', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
             
     except Exception as e:
@@ -515,7 +522,6 @@ async def change_reminders(callback: CallbackQuery, state: FSMContext):
     '''
     Изменение напоминаний о событии
     '''
-    global _id
     try:
         await callback.answer()
         data, *_, frequency = await db.look_at_cur_event(_id)

@@ -81,7 +81,7 @@ async def create_new_event(data:dict):
         conn.commit()
 
         print('Событие успешно создано')
-        return True
+        return event_id
 
     except Exception as e:
         print(f'Ошибка при создании нового мероприятия внутри database.py: {e}')
@@ -161,23 +161,23 @@ async def del_from_db_users(data):
         conn.close()
 
 
-async def look_at_db_events(name):
+async def look_at_db_events(username):
     '''
-    Просмотр всех событий
+    Просмотр всех событий конкретного пользователя
     '''
     conn = sq.connect('tg.db')
     cur = conn.cursor()
     try:
         # Выполняем запрос к таблице users
-        cur.execute('SELECT name FROM users WHERE username=?', (name,))
-        user_name = cur.fetchone()
+        cur.execute('SELECT name FROM users WHERE username=?', (username,))
+        name = cur.fetchone()
 
-        if user_name:
+        if name:
             # Если пользователь найден, выполняем запрос к таблице events
             cur.execute('''SELECT heading, id
                             FROM events e
                             JOIN recipients r ON e.id = r.event_id
-                            WHERE r.recipient_name=?''', (user_name[0],))
+                            WHERE r.recipient_name=?''', (name[0],))
             data = cur.fetchall()
 
             if data:
