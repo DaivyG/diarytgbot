@@ -422,7 +422,7 @@ async def look_at_dates_of_reminders(id_=None):
                         WHERE event_id=?''', (id_,))
         
             data = cur.fetchall()
-            data = [i[0] for i in data]
+            data = [datetime.strptime(i[0], '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%Y %H:%M') for i in data]
 
         return data
     

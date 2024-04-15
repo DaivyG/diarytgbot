@@ -335,7 +335,7 @@ async def select_one_of_events(callback: CallbackQuery):
         datetime_of_event = unpacked_data[5]
 
         reminders = await db.look_at_dates_of_reminders(_id)
-        reminders = ', '.join(reminders)
+        reminders = '\n'.join(reminders)
 
         recipients = ', '.join(unpacked_recipients)
 
@@ -345,12 +345,13 @@ async def select_one_of_events(callback: CallbackQuery):
 <b>Напоминание</b>: {datetime_of_event},
 <b>Цикличность</b>: {frequency},
 <b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
-<b>Получатели</b>: {recipients})
-<b>Автор</b>: @{author_username}
-<b>Напоминания заранее: {reminders}</b>''')
+<b>Получатели</b>: {recipients},
+<b>Автор</b>: @{author_username},
+<b>Напоминания заранее:\n{reminders}</b>''', reply_markup=kb.my_events_inline_keyboard)
 
     except TypeError:
         await callback.message.answer(text='Данное событие уже не существует')
+        raise Exception
 
     except Exception as e:
         print(f'Что-то пошло не так при просмотре базы данных: {e}')
@@ -642,8 +643,9 @@ async def list_of_events(message: Message):
             datetime_of_creating = unpacked_data[3]
             author_username = unpacked_data[4]
             datetime_of_event = unpacked_data[5]
-            reminders = await db.look_at_dates_of_reminders(_id)
-            reminders = ', '.join(reminders)
+
+            reminders = await db.look_at_dates_of_reminders(id_)
+            reminders = '\n'.join(reminders)
 
 
             recipients = ', '.join(unpacked_recipients)
@@ -656,7 +658,7 @@ async def list_of_events(message: Message):
 <b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
 <b>Получатели</b>: {recipients})
 <b>Автор</b>: @{author_username}
-<b>Напоминания заранее: {reminders}</b>''')
+<b>Напоминания заранее:\n{reminders}</b>''', reply_markup=await kb.event_keyboard(id_))
             
     except TypeError:
         await message.answer(text='Данное событие уже не существует')
