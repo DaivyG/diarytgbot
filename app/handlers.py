@@ -114,6 +114,7 @@ async def usual_creating_third_step(message: Message, state: FSMContext):
 async def add_user_at_event_next_step(callback: CallbackQuery, state: FSMContext):
     try:
         global list_of_users
+        global _id
 
         action = callback.data.split('-')[1]
 
@@ -156,8 +157,12 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         author = data['author']
         text = data['text']
         frequency = data.setdefault('frequency', 'Единично')
-        datetime = data.get('datetime')
+        datetime_ = data.get('datetime')
         recipients = data.get('recipients')
+
+        text = data.get('text')
+        if text is None:
+            text = message.text
 
         if recipients is None:
             recipients = await db.username_to_name(f'@{message.from_user.username}')
@@ -167,20 +172,23 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
             recipients = [recipient.capitalize() for recipient in data['recipients']]
             recipients = ", ".join(recipients)
 
-        if datetime is None:
-            datetime = func.next_day_foo()
+        if datetime_ is None:
+            datetime_ = func.next_day_foo()
 
         _id = await db.create_new_event(data)
 
         if not _id:
             raise Exception
         
-        await message.answer(f'''Событие успешно создано со следующими параметрами:
-        <b>Username создателя события</b>: @{author},
-        <b>Описание события</b>: {text},
-        <b>Дата и время</b>: {datetime},
-        <b>Цикличность повторения</b>: {frequency},
-        <b>Получатели</b>: {recipients}''', reply_markup=[kb.my_events_inline_keyboard_2, [kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins]])
+        await message.answer(f'''{text[:30]}
+
+<b>Текст</b>: {text},
+<b>Напоминание</b>: {datetime_},
+<b>Цикличность</b>: {frequency},
+<b>Создано</b>: {datetime.now().strftime('%d.%m.%M %H:%M')},
+<b>Получатели</b>: {recipients},
+<b>Автор</b>: @{author},
+<b>Напоминания заранее</b>: {func.next_day_foo()}''', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
 
     except Exception as e:
@@ -191,6 +199,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         await state.clear()
         list_of_users.clear()
 
+ 
 @router.message(F.text == 'Админ панель')
 async def adm_starting(message: Message):
     '''
@@ -325,16 +334,20 @@ async def select_one_of_events(callback: CallbackQuery):
         author_username = unpacked_data[4]
         datetime_of_event = unpacked_data[5]
 
+        reminders = await db.look_at_dates_of_reminders(_id)
+        reminders = ', '.join(reminders)
+
         recipients = ', '.join(unpacked_recipients)
 
         await callback.message.answer(text=f'''{small_text}
                                       
-<b>Полный текст</b>: {full_text},
-<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Текст</b>: {full_text},
 <b>Напоминание</b>: {datetime_of_event},
-<b>Цикличность события</b>: {frequency},
-<b>Автор события</b>: @{author_username},
-<b>Получатели события</b>: {recipients}''', reply_markup=kb.my_events_inline_keyboard)
+<b>Цикличность</b>: {frequency},
+<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Получатели</b>: {recipients})
+<b>Автор</b>: @{author_username}
+<b>Напоминания заранее: {reminders}</b>''')
 
     except TypeError:
         await callback.message.answer(text='Данное событие уже не существует')
@@ -346,7 +359,7 @@ async def select_one_of_events(callback: CallbackQuery):
 @router.callback_query(F.data == 'edit_my_event')
 async def edit_my_event(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer(text='Что именно хотите изменить?', reply_markup=kb.edit_my_event_keyboard)
+    await callback.message.answer(text='Что хотите изменить?', reply_markup=kb.edit_my_event_keyboard)
 
 
 class Edit_event(StatesGroup):
@@ -363,7 +376,7 @@ class Edit_event(StatesGroup):
 async def change_full_text_first(callback: CallbackQuery, state: FSMContext):
     try:
         await callback.answer()
-        await callback.message.answer(text='Введите полный текст для данного события')
+        await callback.message.answer(text='Введите новый текст:')
         await state.set_state(Edit_event.change_full_text)
 
     except Exception as e:
@@ -446,7 +459,7 @@ async def change_frequency_last(message: Message, state: FSMContext):
         data = await state.update_data(frequency=message.text)
 
         if await db.change_frequency(data['frequency'], _id):
-            await message.answer('Цикличность успешно изменена')
+            await message.answer('Цикличность успешно изменена', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
             return
         
         raise Exception('Что-то пошло не так')
@@ -573,7 +586,7 @@ async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext)
                     time_unit_text = 'часов'
                 else:
                     time_unit_text = 'дней'
-                await callback.message.answer(f'Введите количество {time_unit_text}, за которое вам нужно сообщить о событии. Количество не должно превышать 24 часов для часов и 30 дней для дней.\nВвести нужно только цифру')
+                await callback.message.answer(f'Введите количество {time_unit_text}, за которое вам нужно сообщить о событии. Количество не должно превышать 24 часов для часов и 30 дней для дней.\nВвести нужно только цифру\nПосле ввода обязательно нажмите "Далее"!')
                 await state.set_state(Edit_event.change_reminders)
                 list_of_reminders.append(time_unit)
                 return
@@ -595,7 +608,7 @@ async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext)
         frequency = data['frequency']
 
         if await db.change_reminders(datetime_of_event, formatted_reminders, frequency, _id):
-            await callback.message.answer(f'Все прошло успешно. Вы выбрали следующие напоминания: {formatted_reminders_text}')
+            await callback.message.answer(f'Вы успешно установили предварительные напоминания за: {formatted_reminders_text}')
 
             await state.clear()
             list_of_reminders.clear()
@@ -629,18 +642,22 @@ async def list_of_events(message: Message):
             datetime_of_creating = unpacked_data[3]
             author_username = unpacked_data[4]
             datetime_of_event = unpacked_data[5]
+            reminders = await db.look_at_dates_of_reminders(_id)
+            reminders = ', '.join(reminders)
+
 
             recipients = ', '.join(unpacked_recipients)
 
             await message.answer(text=f'''{small_text}
                                             
-<b>Полный текст</b>: {full_text},
-<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Текст</b>: {full_text},
 <b>Напоминание</b>: {datetime_of_event},
-<b>Цикличность события</b>: {frequency},
-<b>Автор события</b>: @{author_username},
-<b>Получатели события</b>: {recipients}''', reply_markup=await kb.event_keyboard(id_))
-
+<b>Цикличность</b>: {frequency},
+<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Получатели</b>: {recipients})
+<b>Автор</b>: @{author_username}
+<b>Напоминания заранее: {reminders}</b>''')
+            
     except TypeError:
         await message.answer(text='Данное событие уже не существует')
 
@@ -670,4 +687,4 @@ async def edit_my_event(callback: CallbackQuery):
     _id = callback.data.split('-')[1]
 
     await callback.answer()
-    await callback.message.answer(text='Что именно хотите изменить?', reply_markup=kb.edit_my_event_keyboard)
+    await callback.message.answer(text='Что хотите изменить?', reply_markup=kb.edit_my_event_keyboard)

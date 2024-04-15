@@ -6,8 +6,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 '''
 initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Мои напоминания')],
-    [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Быстрое создание напоминания')],
+    [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Список событий')]
 ], resize_keyboard=True, one_time_keyboard=True)
 
@@ -17,8 +17,8 @@ initial_keyboard = ReplyKeyboardMarkup(keyboard=[
 '''
 admin_initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Мои напоминания')],
-    [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Быстрое создание напоминания')],
+    [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Список событий')],
     [KeyboardButton(text='Админ панель')]
 ], resize_keyboard=True, one_time_keyboard=True)
@@ -92,12 +92,12 @@ my_events_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 Клавиатура после нажатия "Изменить информацию в событии"
 '''
 edit_my_event_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Изменить текст события', callback_data='change_full_text')], 
-    [InlineKeyboardButton(text='Изменить дату и время события', callback_data='change_datetime')],
-    [InlineKeyboardButton(text='Изменить напоминания', callback_data='change_reminders')],
-    [InlineKeyboardButton(text='Изменить цикличность напоминания', callback_data='change_frequency')], 
-    [InlineKeyboardButton(text='Изменить адресатов', callback_data='add_recipient')], 
-    [InlineKeyboardButton(text='Удалить напоминание', callback_data='delete_my_event')]
+    [InlineKeyboardButton(text='Текст', callback_data='change_full_text')], 
+    [InlineKeyboardButton(text='Дату и время', callback_data='change_datetime')],
+    [InlineKeyboardButton(text='Предварительные напоминания', callback_data='change_reminders')],
+    [InlineKeyboardButton(text='Цикличность', callback_data='change_frequency')], 
+    [InlineKeyboardButton(text='Адресаты', callback_data='add_recipient')], 
+    [InlineKeyboardButton(text='Удалить', callback_data='delete_my_event')]
 ])
 
 

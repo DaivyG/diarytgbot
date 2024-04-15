@@ -402,7 +402,7 @@ async def delete_my_event(id_):
         conn.close()
 
 
-async def look_at_dates_of_reminders():
+async def look_at_dates_of_reminders(id_=None):
     '''
     Просмотр дат и цикличности напоминаний к разным событиям
     '''
@@ -410,10 +410,20 @@ async def look_at_dates_of_reminders():
     cur = conn.cursor()
 
     try:
-        cur.execute('''SELECT * 
-                    FROM dates_of_reminders''')
+        if id_ is None:
+            cur.execute('''SELECT * 
+            FROM dates_of_reminders''')
+
+            data = cur.fetchall()
+
+        else:
+            cur.execute('''SELECT event_datetime
+                        FROM dates_of_reminders
+                        WHERE event_id=?''', (id_,))
         
-        data = cur.fetchall()
+            data = cur.fetchall()
+            data = [i[0] for i in data]
+
         return data
     
     except Exception as e:
