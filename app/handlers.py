@@ -25,12 +25,14 @@ async def start(message: Message):
     await message.answer('Приветствую! Что хотите сделать?', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins])
 
     data = await db.look_at_db_users()
-    if not data is None:
+    if data is not None:
         dict_of_status = {i[1][1:]:i[-1] for i in data}
         username = message.from_user.username
-        if username in dict_of_status.keys() and dict_of_status[username].split(': ')[1] == 'Еще не регистрировался':
-            await db.add_chat_id_at_db_users(f'@{username}', message.chat.id)
-            print('Успешно добавлен чат id')
+        status = dict_of_status[username]
+        if username in dict_of_status and ': ' in status:
+            status = status.split(': ')
+            if status == 'Еще не регистрировался':
+                await db.add_chat_id_at_db_users(f'@{username}', message.chat.id)
 
 
 class New_event(StatesGroup):
@@ -178,7 +180,7 @@ async def usual_creating_last_step(message: Message, state: FSMContext):
         <b>Описание события</b>: {text},
         <b>Дата и время</b>: {datetime},
         <b>Цикличность повторения</b>: {frequency},
-        <b>Получатели</b>: {recipients}''', reply_markup=kb.my_events_inline_keyboard_2)
+        <b>Получатели</b>: {recipients}''', reply_markup=[kb.my_events_inline_keyboard_2, [kb.initial_keyboard, kb.admin_initial_keyboard][message.from_user.username in admins]])
 
 
     except Exception as e:
@@ -604,3 +606,68 @@ async def usual_creating_fourth_step(callback: CallbackQuery, state: FSMContext)
 
     except Exception as e:
         print(f'Ошибка при выборе напоминаний: {e}')
+
+
+@router.message(F.text == 'Список событий')
+async def list_of_events(message: Message):
+    try:
+        ids = await db.look_at_all_events(f'@{message.from_user.username}')
+        list_of_ids = set([i[0] for i in ids])
+
+        if list_of_ids == 'У вас нет напоминаний' or list_of_ids == 'Пользователь не найден' or list_of_ids == 'Произошла ошибка при выполнении запроса':
+            await message.answer('ids')
+            return
+        
+        for id_ in list_of_ids:
+            info, recipients, frequency = await db.look_at_cur_event(id_)
+
+            unpacked_data = [item for sublist in info for item in sublist]
+            unpacked_recipients = [item[0] for item in recipients]
+
+            full_text = unpacked_data[1]
+            small_text = unpacked_data[2]
+            datetime_of_creating = unpacked_data[3]
+            author_username = unpacked_data[4]
+            datetime_of_event = unpacked_data[5]
+
+            recipients = ', '.join(unpacked_recipients)
+
+            await message.answer(text=f'''{small_text}
+                                            
+<b>Полный текст</b>: {full_text},
+<b>Создано</b>: {datetime.strptime(datetime_of_creating, '%Y-%m-%d %H:%M:%S').strftime('%d.%m.%M %H:%M')},
+<b>Напоминание</b>: {datetime_of_event},
+<b>Цикличность события</b>: {frequency},
+<b>Автор события</b>: @{author_username},
+<b>Получатели события</b>: {recipients}''', reply_markup=await kb.event_keyboard(id_))
+
+    except TypeError:
+        await message.answer(text='Данное событие уже не существует')
+
+    except Exception as e:
+        print(f'Что-то пошло не так при просмотре базы данных: {e}')
+
+
+
+@router.callback_query(F.data.split('-')[0] == 'delete_my_event_2')
+async def delete_reminder(callback: CallbackQuery):
+    '''
+    Удаление события
+    '''
+    try:
+        await callback.answer()
+        if await db.delete_my_event(callback.data.split('-')[1]):
+            await callback.message.delete()
+            await callback.message.answer('Удаление успешно выполнено', reply_markup=[kb.initial_keyboard, kb.admin_initial_keyboard][callback.from_user.username in admins])
+            
+    except Exception as e:
+        await callback.message.answer(f'Произошла ошибка: {e}')
+
+
+@router.callback_query(F.data.split('-')[0] == 'edit_my_event_2')
+async def edit_my_event(callback: CallbackQuery):
+    global _id
+    _id = callback.data.split('-')[1]
+
+    await callback.answer()
+    await callback.message.answer(text='Что именно хотите изменить?', reply_markup=kb.edit_my_event_keyboard)

@@ -8,6 +8,7 @@ initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Мои напоминания')],
     [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Быстрое создание напоминания')],
+    [KeyboardButton(text='Список событий')]
 ], resize_keyboard=True, one_time_keyboard=True)
 
 
@@ -18,6 +19,7 @@ admin_initial_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Мои напоминания')],
     [KeyboardButton(text='Обычное создание напоминания')],
     [KeyboardButton(text='Быстрое создание напоминания')],
+    [KeyboardButton(text='Список событий')],
     [KeyboardButton(text='Админ панель')]
 ], resize_keyboard=True, one_time_keyboard=True)
 
@@ -151,3 +153,14 @@ my_events_inline_keyboard_2 = InlineKeyboardMarkup(inline_keyboard=[
     InlineKeyboardButton(text='Удалить', callback_data='delete_my_event')],
     [InlineKeyboardButton(text='Напомнить заранее', callback_data='change_reminders')]
 ])
+
+
+async def event_keyboard(id_):
+    '''
+    Клавиатура для кнопки показа всех напоминаний
+    '''
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.add(InlineKeyboardButton(text='Изменить', callback_data=f'edit_my_event_2-{id_}'))
+    keyboard.add(InlineKeyboardButton(text='Удалить', callback_data=f'delete_my_event_2-{id_}'))
+    return keyboard.as_markup()

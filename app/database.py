@@ -548,3 +548,34 @@ async def change_reminders(_datetime, list_of_reminders, frequency, _id):
     finally:
         cur.close()
         conn.close()
+
+
+async def look_at_all_events(username):
+    '''
+    Просмотр всех событий конкретного пользователя
+    '''
+    conn = sq.connect('tg.db')
+    cur = conn.cursor()
+    try:
+        # Выполняем запрос к таблице users
+        cur.execute('SELECT name FROM users WHERE username=?', (username,))
+        name = cur.fetchone()
+
+        if name:
+            # Если пользователь найден, выполняем запрос к таблице events
+            cur.execute('''SELECT id
+                            FROM events e
+                            JOIN recipients r ON e.id = r.event_id
+                            WHERE r.recipient_name=? OR r.author_name=?''', (name[0], username[1:],))
+            data = cur.fetchall()
+
+            if data:
+                return data
+            else:
+                return 'У вас нет напоминаний'
+        else:
+            return 'Пользователь не найден'
+
+    except Exception as e:
+        print(f'Ошибка в базе данных при попытке просмотра всех событий{e}')
+        return 'Произошла ошибка при выполнении запроса'
